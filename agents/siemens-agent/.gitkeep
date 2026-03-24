@@ -1,0 +1,2 @@
+# Phase 2 — Siemens PLC agent (OPC UA + Snap7 + PLCSIM)
+# Libraries: asyncua==1.0.6, python-snap7==1.3

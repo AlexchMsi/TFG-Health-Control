@@ -1,0 +1,134 @@
+version: "3.9"
+
+networks:
+  ot-health-net:
+    driver: bridge
+
+volumes:
+  influxdb_data:
+  influxdb_config:
+  grafana_data:
+
+services:
+
+  # ── Time-series database ───────────────────────────────────────────────────
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    restart: unless-stopped
+    networks: [ot-health-net]
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - influxdb_config:/etc/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_ADMIN_USER}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_ADMIN_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Dashboards & alerting ──────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana-oss:10.4.0
+    container_name: grafana
+    restart: unless-stopped
+    networks: [ot-health-net]
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      - GF_SERVER_ROOT_URL=${GF_SERVER_ROOT_URL:-http://localhost:3000}
+      - INFLUXDB_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
+    depends_on:
+      influxdb:
+        condition: service_healthy
+
+  # ── Server / VMware agent (Phase 1) ───────────────────────────────────────
+  server-agent:
+    build:
+      context: .
+      dockerfile: agents/server-agent/Dockerfile
+    container_name: server-agent
+    restart: unless-stopped
+    networks: [ot-health-net]
+    env_file: .env
+    volumes:
+      - ./agents/server-agent/config:/app/config:ro
+    depends_on:
+      influxdb:
+        condition: service_healthy
+
+  # ── REST API ───────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: health-api
+    restart: unless-stopped
+    networks: [ot-health-net]
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      influxdb:
+        condition: service_healthy
+
+  # ── Phase 2: Siemens PLC agent ─────────────────────────────────────────────
+  # siemens-agent:
+  #   build:
+  #     context: .
+  #     dockerfile: agents/siemens-agent/Dockerfile
+  #   container_name: siemens-agent
+  #   restart: unless-stopped
+  #   networks: [ot-health-net]
+  #   env_file: .env
+  #   volumes:
+  #     - ./agents/siemens-agent/config:/app/config:ro
+  #   depends_on:
+  #     influxdb:
+  #       condition: service_healthy
+
+  # ── Phase 3: Rockwell PLC agent ────────────────────────────────────────────
+  # rockwell-agent:
+  #   build:
+  #     context: .
+  #     dockerfile: agents/rockwell-agent/Dockerfile
+  #   container_name: rockwell-agent
+  #   restart: unless-stopped
+  #   networks: [ot-health-net]
+  #   env_file: .env
+  #   volumes:
+  #     - ./agents/rockwell-agent/config:/app/config:ro
+  #   depends_on:
+  #     influxdb:
+  #       condition: service_healthy
+
+  # ── Phase 4: Network agent ─────────────────────────────────────────────────
+  # network-agent:
+  #   build:
+  #     context: .
+  #     dockerfile: agents/network-agent/Dockerfile
+  #   container_name: network-agent
+  #   restart: unless-stopped
+  #   networks: [ot-health-net]
+  #   network_mode: host   # Required for Profinet DCP multicast
+  #   env_file: .env
+  #   volumes:
+  #     - ./agents/network-agent/config:/app/config:ro
+  #   depends_on:
+  #     influxdb:
+  #       condition: service_healthy

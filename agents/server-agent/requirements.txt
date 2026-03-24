@@ -1,0 +1,21 @@
+# InfluxDB client (also pulled via shared, explicit here for clarity)
+influxdb-client==1.44.0
+
+# SNMP — use lextudio fork for Python 3.12 compatibility
+pysnmp-lextudio==6.1.3
+
+# VMware vSphere API
+pyVmomi==8.0.2.0
+
+# WinRM + PowerShell remoting (optional enhanced path)
+pywinrm==0.4.3
+
+# Scheduling
+APScheduler==3.10.4
+
+# Configuration
+pyyaml==6.0.1
+pydantic-settings==2.2.1
+
+# Retry
+tenacity==8.2.3

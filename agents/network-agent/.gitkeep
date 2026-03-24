@@ -1,0 +1,3 @@
+# Phase 4 — Network agent (SNMP + LLDP + Profinet DCP)
+# Libraries: pysnmp, scapy==2.5.0
+# Note: requires Docker capability NET_BROADCAST for Profinet DCP multicast

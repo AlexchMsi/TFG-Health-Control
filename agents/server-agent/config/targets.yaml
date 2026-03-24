@@ -1,0 +1,38 @@
+# Server Agent target configuration
+# Supports two collection methods per Windows target:
+#   snmp   - primary path (no agent required on target, works in locked-down OT)
+#   winrm  - enhanced path (service status, NTP offset — requires WinRM enabled)
+
+windows_servers:
+  - id: "srv-example-01"
+    display_name: "Example Server 01"
+    hostname: "192.168.1.10"
+    collection_method: "snmp"       # "snmp" | "winrm"
+    snmp_community: "public"
+    snmp_version: "2c"
+    snmp_port: 161
+    poll_interval_seconds: 60
+
+  # Example WinRM target (uncomment and configure):
+  # - id: "srv-scada-01"
+  #   display_name: "SCADA Server 01"
+  #   hostname: "192.168.1.20"
+  #   collection_method: "winrm"
+  #   winrm_transport: "ntlm"       # "ntlm" | "kerberos" | "basic"
+  #   critical_services:
+  #     - "W32Time"
+  #     - "WinRM"
+  #     - "EventLog"
+  #   poll_interval_seconds: 60
+
+vmware:
+  enabled: false                    # Set to true when vCenter/ESXi is available
+  vcenter:
+    host: ""                        # vCenter/ESXi IP or FQDN
+    user: ""                        # readonly@vsphere.local
+    password: ""
+    ignore_ssl: false
+    poll_interval_seconds: 120      # vSphere API is heavier, poll less frequently
+  collect_hosts: true
+  collect_vms: true
+  snapshot_age_warning_days: 7      # Alert when snapshot is older than N days
