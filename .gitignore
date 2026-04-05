@@ -20,6 +20,9 @@ influxdb_data/
 influxdb_config/
 grafana_data/
 
+# SQLite config database (runtime data, not source code)
+data/*.db
+
 # IDE
 .vscode/
 .idea/

@@ -5,13 +5,17 @@ from influxdb_client import InfluxDBClient
 
 from shared.config.settings import Settings
 
+from .database import create_db_and_tables
 from .routers import health, servers, vmware
+from .routers import config as config_router
+from .routers import plcs
 
 settings = Settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    create_db_and_tables()
     app.state.influx = InfluxDBClient(
         url=settings.influxdb_url,
         token=settings.influxdb_admin_token,
@@ -37,3 +41,5 @@ app = FastAPI(
 app.include_router(health.router, prefix="/health", tags=["Health"])
 app.include_router(servers.router, prefix="/metrics/servers", tags=["Servers"])
 app.include_router(vmware.router, prefix="/metrics/vmware", tags=["VMware"])
+app.include_router(config_router.router, prefix="/config", tags=["Config"])
+app.include_router(plcs.router, prefix="/metrics/plcs", tags=["PLCs"])

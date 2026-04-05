@@ -129,6 +129,37 @@ class InfluxQueryService:
         """
         return self._execute(flux)
 
+    # ── Siemens PLCs ─────────────────────────────────────────────────────────
+
+    def get_siemens_plcs_latest(
+        self,
+        source_id: str | None = None,
+        plant: str | None = None,
+    ) -> list[dict]:
+        filters = []
+        if source_id:
+            filters.append(f'r["source_id"] == "{source_id}"')
+        if plant:
+            filters.append(f'r["plant"] == "{plant}"')
+
+        extra_filter = ""
+        if filters:
+            combined = " and ".join(filters)
+            extra_filter = f"|> filter(fn: (r) => {combined})"
+
+        flux = f"""
+        from(bucket: "{self._bucket}")
+          |> range(start: -15m)
+          |> filter(fn: (r) => r["_measurement"] == "siemens_plc_health")
+          |> last()
+          |> pivot(rowKey: ["_time", "source_id", "plc_name", "plant", "model", "firmware", "collection_method"],
+                   columnKey: ["_field"],
+                   valueColumn: "_value")
+          {extra_filter}
+          |> drop(columns: ["_start", "_stop", "_measurement"])
+        """
+        return self._execute(flux)
+
     # ── Internal ─────────────────────────────────────────────────────────────
 
     def _execute(self, flux: str) -> list[dict]:
