@@ -28,8 +28,9 @@ data/*.db
 .idea/
 *.iml
 
-# Claude Code local settings (personal tool permissions — never commit)
+# Claude Code — archivos locales (no subir al repo)
 .claude/settings.local.json
+CLAUDE.md
 
 # OS
 .DS_Store
