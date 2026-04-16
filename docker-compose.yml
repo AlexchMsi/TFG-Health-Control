@@ -57,6 +57,16 @@ services:
       influxdb:
         condition: service_healthy
 
+  # ── SNMP test target (local dev only — simulates a Windows host via snmpd) ──
+  snmpd-sim:
+    image: alpine:3.19
+    container_name: snmpd-sim
+    restart: unless-stopped
+    networks: [ot-health-net]
+    command: >
+      sh -c "apk add --no-cache net-snmp net-snmp-tools 2>/dev/null &&
+             snmpd -f -Lo udp:0.0.0.0:1161"
+
   # ── Server / VMware agent (Phase 1) ───────────────────────────────────────
   server-agent:
     build:

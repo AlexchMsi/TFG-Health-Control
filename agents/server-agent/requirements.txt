@@ -2,7 +2,8 @@
 influxdb-client==1.44.0
 
 # SNMP — use lextudio fork for Python 3.12 compatibility
-pysnmp-lextudio==6.1.3
+pysnmp-lextudio==5.0.34
+pyasn1==0.5.1
 
 # VMware vSphere API
 pyVmomi==8.0.2.0

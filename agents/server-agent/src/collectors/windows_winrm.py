@@ -8,7 +8,7 @@ Uses PowerShell remoting over WinRM to collect:
 
 Requires WinRM enabled on the target:
   Enable-PSRemoting -Force
-  Set-Item WSMan:\localhost\Client\TrustedHosts -Value "<agent IP>"
+  Set-Item WSMan:\\localhost\\Client\\TrustedHosts -Value "<agent IP>"
 """
 from __future__ import annotations
 

@@ -45,7 +45,7 @@ class InfluxWriter:
         for key, value in fields.items():
             if value is not None:
                 point = point.field(key, value)
-        point = point.time(timestamp, WritePrecision.SECONDS)
+        point = point.time(timestamp, WritePrecision.S)
 
         try:
             self._write_api.write(bucket=self._bucket, org=self._org, record=point)
@@ -67,7 +67,7 @@ class InfluxWriter:
             for k, v in p.get("fields", {}).items():
                 if v is not None:
                     point = point.field(k, v)
-            point = point.time(ts, WritePrecision.SECONDS)
+            point = point.time(ts, WritePrecision.S)
             influx_points.append(point)
 
         try:

@@ -4,14 +4,14 @@
 #   winrm  - enhanced path (service status, NTP offset — requires WinRM enabled)
 
 windows_servers:
-  - id: "srv-example-01"
-    display_name: "Example Server 01"
-    hostname: "192.168.1.10"
-    collection_method: "snmp"       # "snmp" | "winrm"
+  - id: "pc-local-test"
+    display_name: "PC Local (prueba)"
+    hostname: "snmpd-sim"             # SNMP test container (same Docker network)
+    collection_method: "snmp"
     snmp_community: "public"
     snmp_version: "2c"
-    snmp_port: 161
-    poll_interval_seconds: 60
+    snmp_port: 1161
+    poll_interval_seconds: 30
 
   # Example WinRM target (uncomment and configure):
   # - id: "srv-scada-01"

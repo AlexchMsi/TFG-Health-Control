@@ -28,9 +28,13 @@ data/*.db
 .idea/
 *.iml
 
+# Claude Code local settings (personal tool permissions — never commit)
+.claude/settings.local.json
+
 # OS
 .DS_Store
 Thumbs.db
+~$*
 
 # Logs
 *.log

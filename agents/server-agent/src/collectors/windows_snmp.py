@@ -60,12 +60,20 @@ class WindowsSNMPCollector(AbstractCollector):
 
     def collect(self) -> list[WindowsServerMetric]:
         try:
+            # Fast reachability check — one GET before the expensive walks
+            uptime_raw = self._get(OID_SYS_UPTIME)
+            if uptime_raw is None:
+                raise ConnectionError(
+                    f"no SNMP response from {self.hostname}:{self.port} "
+                    f"(community={self.community!r})"
+                )
             metric = WindowsServerMetric(
                 source_id=self.target_id,
                 source_type="windows_server",
                 hostname=self.hostname,
                 collection_method="snmp",
             )
+            metric.uptime_seconds = self._parse_uptime(uptime_raw)
             metric.cpu_usage_percent = self._get_cpu()
             ram_total, ram_used = self._get_memory()
             metric.ram_total_gb = ram_total
@@ -73,7 +81,6 @@ class WindowsSNMPCollector(AbstractCollector):
             if ram_total > 0:
                 metric.ram_usage_percent = round(ram_used / ram_total * 100, 2)
             metric.disks = self._get_disks()
-            metric.uptime_seconds = self._get_uptime()
             metric.os_version = self._get_sys_descr()
             metric.reachable = True
             logger.info("snmp_collected target=%s cpu=%.1f%% ram=%.1f%%",
@@ -202,13 +209,9 @@ class WindowsSNMPCollector(AbstractCollector):
                 pass
         return disks
 
-    def _get_uptime(self) -> int:
-        """Return system uptime in seconds from sysUpTime (centiseconds)."""
-        raw = self._get(OID_SYS_UPTIME)
-        if raw is None:
-            return 0
+    def _parse_uptime(self, raw: str) -> int:
+        """Parse sysUpTime centiseconds string → seconds."""
         try:
-            # sysUpTime is in centiseconds (hundredths of a second)
             centiseconds = int(raw.split(" ")[0].replace(",", ""))
             return centiseconds // 100
         except (ValueError, IndexError):
