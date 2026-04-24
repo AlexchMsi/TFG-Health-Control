@@ -22,6 +22,15 @@ windows_servers:
     snmp_port: 161
     poll_interval_seconds: 30
 
+  - id: "vm-server-2019"
+    display_name: "VM Windows Server 2019"
+    hostname: "192.168.1.155"         # VMware Bridged — misma LAN
+    collection_method: "snmp"
+    snmp_community: "public"
+    snmp_version: "2c"
+    snmp_port: 161
+    poll_interval_seconds: 30
+
   # Example WinRM target (uncomment and configure):
   # - id: "srv-scada-01"
   #   display_name: "SCADA Server 01"

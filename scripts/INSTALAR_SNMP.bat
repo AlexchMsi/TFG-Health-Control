@@ -16,8 +16,8 @@ echo Instalando y configurando el servicio SNMP...
 echo (Esto puede tardar 1-2 minutos la primera vez)
 echo.
 
-:: Instalar SNMP si no está instalado
-powershell -Command "Add-WindowsCapability -Online -Name 'SNMP.Client~~~~0.0.1.0' 2>$null; $null" 2>nul
+:: Instalar SNMP (detecta automaticamente Windows Server vs Windows Client)
+powershell -Command "$pt = (Get-WmiObject Win32_OperatingSystem).ProductType; if ($pt -eq 1) { Add-WindowsCapability -Online -Name 'SNMP.Client~~~~0.0.1.0' 2>$null } else { Install-WindowsFeature -Name SNMP-Service 2>$null }" 2>nul
 
 :: Configurar community "public" (solo lectura)
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\SNMP\Parameters\ValidCommunities" /v "public" /t REG_DWORD /d 4 /f >nul 2>&1
