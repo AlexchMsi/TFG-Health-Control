@@ -1,0 +1,46 @@
+# Local dev targets — use this when running server-agent outside Docker
+# (python -m src.main from agents/server-agent/)
+#
+# Differences vs targets.yaml:
+#   - snmpd-sim uses localhost:1161 (Docker exposes the port to the host)
+#   - vm-server-2019 is reachable because the agent runs as a Windows process
+
+windows_servers:
+  - id: "pc-local-test"
+    display_name: "PC Local (prueba)"
+    hostname: "localhost"               # snmpd-sim exposed to host on port 1161
+    collection_method: "snmp"
+    snmp_community: "public"
+    snmp_version: "2c"
+    snmp_port: 1161
+    poll_interval_seconds: 30
+
+  - id: "pc-alex-windows"
+    display_name: "PC Alex — Windows 11"
+    hostname: "192.168.1.103"
+    collection_method: "snmp"
+    snmp_community: "public"
+    snmp_version: "2c"
+    snmp_port: 161
+    poll_interval_seconds: 30
+
+  - id: "vm-server-2019"
+    display_name: "VM Windows Server 2019"
+    hostname: "192.168.1.155"           # Reachable from Windows (unlike from Docker)
+    collection_method: "snmp"
+    snmp_community: "public"
+    snmp_version: "2c"
+    snmp_port: 161
+    poll_interval_seconds: 30
+
+vmware:
+  enabled: false
+  vcenter:
+    host: ""
+    user: ""
+    password: ""
+    ignore_ssl: false
+    poll_interval_seconds: 120
+  collect_hosts: true
+  collect_vms: true
+  snapshot_age_warning_days: 7

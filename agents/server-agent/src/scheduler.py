@@ -1,13 +1,13 @@
 """
 Agent scheduling — one APScheduler job per configured target.
-All collection jobs run independently with their own interval.
+Supports dynamic add/remove of targets via ConfigPoller (no restart needed).
 """
 from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
 
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 from shared.influx.writer import InfluxWriter, WriteError
@@ -24,51 +24,53 @@ logger = logging.getLogger(__name__)
 
 
 class AgentScheduler:
-    def __init__(self, config: dict, writer: InfluxWriter) -> None:
-        self._scheduler = BlockingScheduler(timezone="UTC")
+    def __init__(self, writer: InfluxWriter) -> None:
+        self._aps = BackgroundScheduler(timezone="UTC")
         self._writer = writer
-        self._register_jobs(config)
 
-    # ── Job registration ─────────────────────────────────────────────────────
+    # ── Public API used by ConfigPoller ──────────────────────────────────────
 
-    def _register_jobs(self, config: dict) -> None:
-        for srv in config.get("windows_servers", []):
-            collector = self._build_windows_collector(srv)
-            interval = srv.get("poll_interval_seconds", 60)
-            self._scheduler.add_job(
-                func=self._run_collection,
-                trigger=IntervalTrigger(seconds=interval),
-                args=[collector],
-                id=f"windows_{srv['id']}",
-                max_instances=1,   # Prevent overlap if collection is slow
-                jitter=5,          # Spread load across targets
-                misfire_grace_time=interval,
-            )
-            logger.info("registered_job id=windows_%s interval=%ds", srv["id"], interval)
+    def add_target(self, target: dict) -> None:
+        cfg = target["config"]
+        flat_cfg = {"id": target["id"], **cfg}
+        collector = self._build_windows_collector(flat_cfg)
+        interval = cfg.get("poll_interval_seconds", 60)
+        self._aps.add_job(
+            func=self._run_collection,
+            trigger=IntervalTrigger(seconds=interval, jitter=5),
+            args=[collector],
+            id=f"windows_{target['id']}",
+            max_instances=1,
+            misfire_grace_time=interval,
+            replace_existing=True,
+        )
+        logger.info("add_target id=%s method=%s interval=%ds",
+                    target["id"], cfg.get("collection_method", "snmp"), interval)
 
-        vmware_cfg = config.get("vmware", {})
-        if vmware_cfg.get("enabled") and vmware_cfg.get("vcenter", {}).get("host"):
-            vcenter = vmware_cfg["vcenter"]
-            vcenter["collect_hosts"] = vmware_cfg.get("collect_hosts", True)
-            vcenter["collect_vms"] = vmware_cfg.get("collect_vms", True)
-            collector = VMwareCollector(vcenter)
-            interval = vcenter.get("poll_interval_seconds", 120)
-            self._scheduler.add_job(
-                func=self._run_collection,
-                trigger=IntervalTrigger(seconds=interval),
-                args=[collector],
-                id="vmware_vcenter",
-                max_instances=1,
-                jitter=10,
-                misfire_grace_time=interval,
-            )
-            logger.info("registered_job id=vmware_vcenter interval=%ds", interval)
+    def remove_target(self, target_id: str) -> None:
+        job_id = f"windows_{target_id}"
+        if self._aps.get_job(job_id):
+            self._aps.remove_job(job_id)
+            logger.info("remove_target id=%s", target_id)
+
+    @property
+    def aps(self) -> BackgroundScheduler:
+        return self._aps
 
     def _build_windows_collector(self, cfg: dict) -> AbstractCollector:
         method = cfg.get("collection_method", "snmp")
         if method == "winrm":
             return WindowsWinRMCollector(cfg)
         return WindowsSNMPCollector(cfg)
+
+    # ── Lifecycle ────────────────────────────────────────────────────────────
+
+    def start(self) -> None:
+        self._aps.start()
+        logger.info("agent_scheduler_started")
+
+    def shutdown(self) -> None:
+        self._aps.shutdown(wait=False)
 
     # ── Job execution ────────────────────────────────────────────────────────
 
@@ -194,12 +196,3 @@ class AgentScheduler:
             timestamp=ts,
         )
 
-    # ── Lifecycle ────────────────────────────────────────────────────────────
-
-    def start(self) -> None:
-        logger.info("agent_scheduler_starting jobs=%d",
-                    len(self._scheduler.get_jobs()))
-        self._scheduler.start()
-
-    def shutdown(self) -> None:
-        self._scheduler.shutdown(wait=False)

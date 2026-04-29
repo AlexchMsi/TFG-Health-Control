@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from influxdb_client import InfluxDBClient
 
 from shared.config.settings import Settings
@@ -9,6 +11,8 @@ from .database import create_db_and_tables
 from .routers import health, servers, vmware
 from .routers import config as config_router
 from .routers import plcs
+
+_UI_HTML = (Path(__file__).parent / "static" / "index.html").read_text(encoding="utf-8")
 
 settings = Settings()
 
@@ -43,3 +47,8 @@ app.include_router(servers.router, prefix="/metrics/servers", tags=["Servers"])
 app.include_router(vmware.router, prefix="/metrics/vmware", tags=["VMware"])
 app.include_router(config_router.router, prefix="/config", tags=["Config"])
 app.include_router(plcs.router, prefix="/metrics/plcs", tags=["PLCs"])
+
+
+@app.get("/ui", response_class=HTMLResponse, include_in_schema=False)
+async def ui():
+    return _UI_HTML
