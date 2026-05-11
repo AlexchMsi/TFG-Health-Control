@@ -80,6 +80,8 @@ services:
     env_file: .env
     environment:
       - API_URL=http://health-api:8000
+    volumes:
+      - ./agents/server-agent/config/targets.yaml:/app/config/targets.yaml:ro
     depends_on:
       influxdb:
         condition: service_healthy
