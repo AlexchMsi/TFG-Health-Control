@@ -110,6 +110,7 @@
                 class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="snmp">SNMP</option>
                 <option value="winrm">WinRM</option>
+                <option value="vmware">VMware / ESXi</option>
               </select>
             </div>
           </div>
@@ -124,6 +125,24 @@
               <input id="f-snmp_port" type="number" value="161"
                 class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
+          </div>
+          <div id="vmware-fields" class="hidden space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Usuario</label>
+                <input id="f-vmware_user" type="text" placeholder="root"
+                  class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Contraseña</label>
+                <input id="f-vmware_password" type="password"
+                  class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+            </div>
+            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input id="f-vmware_ignore_ssl" type="checkbox" checked class="rounded">
+              Ignorar certificado SSL (self-signed)
+            </label>
           </div>
         </div>
 
@@ -290,6 +309,7 @@
       document.getElementById('fields-server').classList.toggle('hidden', agentType !== 'server');
       document.getElementById('fields-siemens').classList.toggle('hidden', agentType !== 'siemens');
       document.getElementById('snmp-fields').classList.toggle('hidden', method !== 'snmp');
+      document.getElementById('vmware-fields').classList.toggle('hidden', method !== 'vmware');
       document.getElementById('opcua-fields').classList.toggle('hidden', plcMethod === 'snap7');
       document.getElementById('snap7-fields').classList.toggle('hidden', plcMethod === 'opcua');
     }
@@ -314,10 +334,17 @@
         const hostname = document.getElementById('f-hostname').value.trim();
         if (!hostname) { showError('El hostname es obligatorio.'); return; }
         const method = document.getElementById('f-collection_method').value;
-        config = { ...config, hostname, collection_method: method, snmp_version: '2c' };
+        config = { ...config, hostname, collection_method: method };
         if (method === 'snmp') {
           config.snmp_community = document.getElementById('f-snmp_community').value.trim() || 'public';
           config.snmp_port = parseInt(document.getElementById('f-snmp_port').value) || 161;
+          config.snmp_version = '2c';
+        } else if (method === 'vmware') {
+          config.host = hostname;
+          config.user = document.getElementById('f-vmware_user').value.trim();
+          config.password = document.getElementById('f-vmware_password').value;
+          config.ignore_ssl = document.getElementById('f-vmware_ignore_ssl').checked;
+          if (!config.user) { showError('El usuario de VMware es obligatorio.'); return; }
         }
       } else if (agentType === 'siemens') {
         const plcMethod = document.getElementById('f-plc_method').value;

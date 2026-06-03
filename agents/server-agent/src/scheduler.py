@@ -61,6 +61,8 @@ class AgentScheduler:
         method = cfg.get("collection_method", "snmp")
         if method == "winrm":
             return WindowsWinRMCollector(cfg)
+        if method == "vmware":
+            return VMwareCollector(cfg)
         return WindowsSNMPCollector(cfg)
 
     # ── Lifecycle ────────────────────────────────────────────────────────────
