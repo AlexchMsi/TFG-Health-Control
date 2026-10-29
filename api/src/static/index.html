@@ -12,63 +12,109 @@
   <header class="bg-gray-900 text-white px-6 py-4 flex items-center gap-3 shadow">
     <div class="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></div>
     <span class="font-semibold tracking-wide">GEA Control System Health Status</span>
-    <span class="ml-auto text-gray-400 text-sm">Gestión de targets</span>
+    <a id="grafana-link" href="#" target="_blank" class="ml-auto text-gray-400 text-sm hover:text-white">Grafana →</a>
     <a href="/docs" target="_blank" class="text-gray-400 text-sm hover:text-white ml-4">API docs →</a>
   </header>
 
-  <main class="max-w-5xl mx-auto p-6 space-y-6">
-
-    <!-- Stats -->
-    <div class="grid grid-cols-3 gap-4">
-      <div class="bg-white rounded-lg shadow p-4 text-center">
-        <div id="stat-total" class="text-3xl font-bold text-gray-700">—</div>
-        <div class="text-sm text-gray-500 mt-1">Total targets</div>
-      </div>
-      <div class="bg-white rounded-lg shadow p-4 text-center">
-        <div id="stat-active" class="text-3xl font-bold text-green-600">—</div>
-        <div class="text-sm text-gray-500 mt-1">Activos</div>
-      </div>
-      <div class="bg-white rounded-lg shadow p-4 text-center">
-        <div id="stat-inactive" class="text-3xl font-bold text-gray-400">—</div>
-        <div class="text-sm text-gray-500 mt-1">Inactivos</div>
-      </div>
+  <!-- Tabs -->
+  <nav class="bg-white border-b shadow-sm">
+    <div class="max-w-6xl mx-auto px-6 flex gap-1">
+      <button id="tab-btn-targets" onclick="showView('targets')"
+        class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-blue-600 text-blue-700">Targets</button>
+      <button id="tab-btn-status" onclick="showView('status')"
+        class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">Estado</button>
+      <button id="tab-btn-recs" onclick="showView('recs')"
+        class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">Recomendaciones IA</button>
     </div>
+  </nav>
 
-    <!-- Toolbar -->
-    <div class="flex justify-between items-center">
-      <h2 class="font-medium text-gray-700">Targets configurados</h2>
-      <button onclick="openModal()"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition">
-        + Añadir target
-      </button>
-    </div>
+  <main class="max-w-6xl mx-auto p-6 space-y-6">
 
-    <!-- Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-      <table class="w-full text-sm">
-        <thead class="bg-gray-50 text-gray-500 text-xs uppercase border-b">
-          <tr>
-            <th class="px-4 py-3 text-left">Nombre</th>
-            <th class="px-4 py-3 text-left">Tipo</th>
-            <th class="px-4 py-3 text-left">Host / IP</th>
-            <th class="px-4 py-3 text-left">Planta</th>
-            <th class="px-4 py-3 text-left">Estado</th>
-            <th class="px-4 py-3 text-left">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="targets-tbody">
-          <tr><td colspan="6" class="text-center text-gray-400 py-10">Cargando...</td></tr>
-        </tbody>
-      </table>
-    </div>
+    <!-- ══════════════ VIEW: TARGETS ══════════════ -->
+    <section id="view-targets" class="space-y-6">
+
+      <div class="grid grid-cols-3 gap-4">
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+          <div id="stat-total" class="text-3xl font-bold text-gray-700">—</div>
+          <div class="text-sm text-gray-500 mt-1">Total targets</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+          <div id="stat-active" class="text-3xl font-bold text-green-600">—</div>
+          <div class="text-sm text-gray-500 mt-1">Activos</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+          <div id="stat-inactive" class="text-3xl font-bold text-gray-400">—</div>
+          <div class="text-sm text-gray-500 mt-1">Inactivos</div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <h2 class="font-medium text-gray-700">Targets configurados</h2>
+        <button onclick="openModal()"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition">
+          + Añadir target
+        </button>
+      </div>
+
+      <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 text-gray-500 text-xs uppercase border-b">
+            <tr>
+              <th class="px-4 py-3 text-left">Nombre</th>
+              <th class="px-4 py-3 text-left">Tipo</th>
+              <th class="px-4 py-3 text-left">Host / IP</th>
+              <th class="px-4 py-3 text-left">Planta</th>
+              <th class="px-4 py-3 text-left">Estado</th>
+              <th class="px-4 py-3 text-left">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="targets-tbody">
+            <tr><td colspan="6" class="text-center text-gray-400 py-10">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════ VIEW: ESTADO ══════════════ -->
+    <section id="view-status" class="hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <h2 class="font-medium text-gray-700">Estado en vivo
+          <span id="status-updated" class="text-xs text-gray-400 font-normal ml-2"></span>
+        </h2>
+        <button onclick="loadStatus()"
+          class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded text-sm font-medium transition">
+          ⟳ Actualizar
+        </button>
+      </div>
+      <p class="text-xs text-gray-500">Últimos valores de cada equipo (ventana de 10–15 min). Si un equipo lleva más tiempo sin escribir, no aparece: revisa el agente o el target. Para histórico y gráficas, usa Grafana.</p>
+
+      <div id="status-content" class="space-y-6">
+        <div class="text-center text-gray-400 py-10">Cargando estado...</div>
+      </div>
+    </section>
+
+    <!-- ══════════════ VIEW: RECOMENDACIONES ══════════════ -->
+    <section id="view-recs" class="hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <h2 class="font-medium text-gray-700">Recomendaciones del asistente IA</h2>
+        <button id="analyze-btn" onclick="runAnalyze()"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium transition disabled:opacity-50 disabled:cursor-wait">
+          ▶ Analizar ahora
+        </button>
+      </div>
+      <p class="text-xs text-gray-500">El agente analiza las métricas automáticamente cada 15 minutos. "Analizar ahora" lanza un análisis puntual (puede tardar 1–3 min con el modelo local).</p>
+      <div id="recs-content" class="space-y-4">
+        <div class="text-center text-gray-400 py-10">Cargando recomendaciones...</div>
+      </div>
+    </section>
 
   </main>
 
-  <!-- Modal -->
+  <!-- Modal añadir/editar target -->
   <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
       <div class="px-6 py-4 border-b flex justify-between items-center">
-        <h3 class="font-semibold text-gray-800">Añadir target de monitorización</h3>
+        <h3 id="modal-title" class="font-semibold text-gray-800">Añadir target de monitorización</h3>
         <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
       </div>
 
@@ -125,6 +171,40 @@
               <label class="block text-xs font-medium text-gray-600 mb-1">Puerto SNMP</label>
               <input id="f-snmp_port" type="number" value="161"
                 class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+          <div id="winrm-fields" class="hidden space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Usuario WinRM</label>
+                <input id="f-winrm_user" type="text" placeholder="DOMINIO\usuario"
+                  class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Contraseña WinRM</label>
+                <input id="f-winrm_password" type="password"
+                  class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Transporte</label>
+                <select id="f-winrm_transport"
+                  class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="ntlm">NTLM</option>
+                  <option value="basic">Basic</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Puerto WinRM</label>
+                <input id="f-winrm_port" type="number" value="5985"
+                  class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Servicios críticos a vigilar (uno por línea)</label>
+              <textarea id="f-critical_services" rows="3" placeholder="W32Time&#10;Spooler&#10;MSSQLSERVER"
+                class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
             </div>
           </div>
           <div id="vmware-fields" class="hidden space-y-3">
@@ -248,8 +328,20 @@
   </div>
 
   <script>
-    const AGENT_TYPE_LABELS = { server: 'server', siemens: 'siemens', scada: 'scada', rockwell: 'rockwell', network: 'network' };
     const TYPE_COLORS = { server: 'bg-blue-100 text-blue-700', siemens: 'bg-purple-100 text-purple-700', scada: 'bg-green-100 text-green-700', rockwell: 'bg-orange-100 text-orange-700', network: 'bg-teal-100 text-teal-700' };
+    const RISK_COLORS = { low: 'bg-green-100 text-green-700', medium: 'bg-yellow-100 text-yellow-700', high: 'bg-orange-100 text-orange-700', critical: 'bg-red-100 text-red-700' };
+
+    let editingId = null;       // null = modo añadir; string = modo editar
+    let targetsCache = [];
+    let statusTimer = null;
+
+    document.getElementById('grafana-link').href = `http://${window.location.hostname}:3000`;
+
+    // ── Utilidades ───────────────────────────────────────────────────────────
+    function esc(value) {
+      return String(value ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
 
     async function api(method, path, body) {
       const opts = { method, headers: { 'Content-Type': 'application/json' } };
@@ -257,19 +349,50 @@
       const r = await fetch(path, opts);
       if (!r.ok) {
         const err = await r.json().catch(() => ({ detail: r.statusText }));
-        throw new Error(err.detail || r.statusText);
+        throw new Error(typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail));
       }
       return r.status === 204 ? null : r.json();
     }
 
+    function reachableBadge(v) {
+      const ok = v === 1 || v === true;
+      return `<span class="px-2 py-0.5 rounded-full text-xs font-medium ${ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${ok ? 'OK' : 'SIN CONEXIÓN'}</span>`;
+    }
+
+    function fmt(v, suffix = '') {
+      if (v === null || v === undefined || v === '') return '—';
+      if (typeof v === 'number') return (Math.round(v * 100) / 100) + suffix;
+      return esc(v) + suffix;
+    }
+
+    // ── Vistas / tabs ────────────────────────────────────────────────────────
+    function showView(name) {
+      for (const view of ['targets', 'status', 'recs']) {
+        document.getElementById(`view-${view}`).classList.toggle('hidden', view !== name);
+        const btn = document.getElementById(`tab-btn-${view}`);
+        btn.classList.toggle('border-blue-600', view === name);
+        btn.classList.toggle('text-blue-700', view === name);
+        btn.classList.toggle('border-transparent', view !== name);
+        btn.classList.toggle('text-gray-500', view !== name);
+      }
+      clearInterval(statusTimer);
+      if (name === 'status') {
+        loadStatus();
+        statusTimer = setInterval(loadStatus, 30000);
+      }
+      if (name === 'recs') loadRecommendations();
+      if (name === 'targets') loadTargets();
+    }
+
+    // ── Targets ──────────────────────────────────────────────────────────────
     async function loadTargets() {
       try {
-        const targets = await api('GET', '/config/targets');
-        renderStats(targets);
-        renderTable(targets);
+        targetsCache = await api('GET', '/config/targets');
+        renderStats(targetsCache);
+        renderTable(targetsCache);
       } catch (e) {
         document.getElementById('targets-tbody').innerHTML =
-          `<tr><td colspan="6" class="text-center text-red-500 py-10">Error cargando targets: ${e.message}</td></tr>`;
+          `<tr><td colspan="6" class="text-center text-red-500 py-10">Error cargando targets: ${esc(e.message)}</td></tr>`;
       }
     }
 
@@ -281,7 +404,7 @@
 
     function getHost(target) {
       const c = target.config;
-      return c.hostname || c.snap7_host || (c.opcua_url ? c.opcua_url.replace('opc.tcp://', '') : '—');
+      return c.hostname || c.host || c.snap7_host || (c.opcua_url ? c.opcua_url.replace('opc.tcp://', '') : '—');
     }
 
     function renderTable(targets) {
@@ -293,28 +416,26 @@
       }
       tbody.innerHTML = targets.map(t => `
         <tr class="border-t hover:bg-gray-50 ${t.enabled ? '' : 'opacity-50'}">
-          <td class="px-4 py-3 font-medium">${t.display_name}</td>
+          <td class="px-4 py-3 font-medium">${esc(t.display_name)}</td>
           <td class="px-4 py-3">
             <span class="px-2 py-0.5 rounded text-xs font-medium ${TYPE_COLORS[t.agent_type] || 'bg-gray-100 text-gray-600'}">
-              ${t.agent_type}
-            </span>
+              ${esc(t.agent_type)}</span>
+            <span class="text-xs text-gray-400 ml-1">${esc(t.config.collection_method || '')}</span>
           </td>
-          <td class="px-4 py-3 font-mono text-xs text-gray-600">${getHost(t)}</td>
-          <td class="px-4 py-3 text-gray-600">${t.plant}</td>
+          <td class="px-4 py-3 font-mono text-xs text-gray-600">${esc(getHost(t))}</td>
+          <td class="px-4 py-3 text-gray-600">${esc(t.plant)}</td>
           <td class="px-4 py-3">
             <span class="px-2 py-0.5 rounded-full text-xs font-medium ${t.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
-              ${t.enabled ? 'activo' : 'inactivo'}
-            </span>
+              ${t.enabled ? 'activo' : 'inactivo'}</span>
           </td>
           <td class="px-4 py-3 flex gap-2">
-            <button onclick="toggleTarget('${t.id}', ${t.enabled})"
+            <button onclick="openModal('${esc(t.id)}')"
+              class="text-xs px-2 py-1 rounded border border-blue-200 text-blue-600 hover:bg-blue-50">Editar</button>
+            <button onclick="toggleTarget('${esc(t.id)}', ${t.enabled})"
               class="text-xs px-2 py-1 rounded border hover:bg-gray-100 text-gray-600">
-              ${t.enabled ? 'Pausar' : 'Activar'}
-            </button>
-            <button onclick="deleteTarget('${t.id}', '${t.display_name}')"
-              class="text-xs px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50">
-              Eliminar
-            </button>
+              ${t.enabled ? 'Pausar' : 'Activar'}</button>
+            <button onclick="deleteTarget('${esc(t.id)}', '${esc(t.display_name)}')"
+              class="text-xs px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50">Eliminar</button>
           </td>
         </tr>
       `).join('');
@@ -335,15 +456,60 @@
       } catch (e) { alert('Error: ' + e.message); }
     }
 
-    function openModal() {
+    // ── Modal añadir / editar ────────────────────────────────────────────────
+    function openModal(id = null) {
+      editingId = id;
       document.getElementById('modal').classList.remove('hidden');
       document.getElementById('add-form').reset();
       document.getElementById('form-error').classList.add('hidden');
+      document.getElementById('modal-title').textContent = id ? 'Editar target' : 'Añadir target de monitorización';
+      document.getElementById('f-agent_type').disabled = !!id;  // el tipo no se puede cambiar
+      if (id) prefillForm(targetsCache.find(t => t.id === id));
       updateFields();
+    }
+
+    function prefillForm(t) {
+      if (!t) return;
+      const c = t.config || {};
+      const set = (fid, value) => { const el = document.getElementById(fid); if (el && value !== undefined && value !== null) el.value = value; };
+      set('f-display_name', t.display_name);
+      set('f-plant', t.plant);
+      set('f-agent_type', t.agent_type);
+      set('f-poll_interval', c.poll_interval_seconds || 30);
+
+      if (t.agent_type === 'server') {
+        set('f-hostname', c.hostname || c.host);
+        set('f-collection_method', c.collection_method || 'snmp');
+        set('f-snmp_community', c.snmp_community || 'public');
+        set('f-snmp_port', c.snmp_port || 161);
+        set('f-winrm_user', c.winrm_user);
+        set('f-winrm_password', c.winrm_password);
+        set('f-winrm_transport', c.winrm_transport || 'ntlm');
+        set('f-winrm_port', c.winrm_port || 5985);
+        set('f-critical_services', (c.critical_services || []).join('\n'));
+        set('f-vmware_user', c.user);
+        set('f-vmware_password', c.password);
+        document.getElementById('f-vmware_ignore_ssl').checked = c.ignore_ssl !== false;
+      } else if (t.agent_type === 'siemens') {
+        set('f-plc_method', c.collection_method || 'auto');
+        set('f-opcua_url', c.opcua_url);
+        set('f-snap7_host', c.snap7_host);
+        set('f-snap7_rack', c.snap7_rack ?? 0);
+        set('f-snap7_slot', c.snap7_slot ?? 1);
+      } else if (t.agent_type === 'scada') {
+        set('f-scada_opcua_url', c.opcua_url);
+        set('f-scada_username', c.username);
+        set('f-scada_password', c.password);
+        set('f-scada_type', c.scada_type || 'auto');
+        set('f-scada_timeout', c.timeout_seconds || 10);
+        set('f-scada_tags', (c.tags || []).map(tag => `${tag.name},${tag.node_id}`).join('\n'));
+      }
     }
 
     function closeModal() {
       document.getElementById('modal').classList.add('hidden');
+      editingId = null;
+      document.getElementById('f-agent_type').disabled = false;
     }
 
     function updateFields() {
@@ -355,6 +521,7 @@
       document.getElementById('fields-siemens').classList.toggle('hidden', agentType !== 'siemens');
       document.getElementById('fields-scada').classList.toggle('hidden', agentType !== 'scada');
       document.getElementById('snmp-fields').classList.toggle('hidden', method !== 'snmp');
+      document.getElementById('winrm-fields').classList.toggle('hidden', method !== 'winrm');
       document.getElementById('vmware-fields').classList.toggle('hidden', method !== 'vmware');
       document.getElementById('opcua-fields').classList.toggle('hidden', plcMethod === 'snap7');
       document.getElementById('snap7-fields').classList.toggle('hidden', plcMethod === 'opcua');
@@ -385,6 +552,14 @@
           config.snmp_community = document.getElementById('f-snmp_community').value.trim() || 'public';
           config.snmp_port = parseInt(document.getElementById('f-snmp_port').value) || 161;
           config.snmp_version = '2c';
+        } else if (method === 'winrm') {
+          config.winrm_user = document.getElementById('f-winrm_user').value.trim();
+          config.winrm_password = document.getElementById('f-winrm_password').value;
+          config.winrm_transport = document.getElementById('f-winrm_transport').value;
+          config.winrm_port = parseInt(document.getElementById('f-winrm_port').value) || 5985;
+          config.critical_services = document.getElementById('f-critical_services').value
+            .split('\n').map(s => s.trim()).filter(Boolean);
+          if (!config.winrm_user) { showError('El usuario WinRM es obligatorio.'); return; }
         } else if (method === 'vmware') {
           config.host = hostname;
           config.user = document.getElementById('f-vmware_user').value.trim();
@@ -401,6 +576,10 @@
           config.snap7_rack = parseInt(document.getElementById('f-snap7_rack').value) || 0;
           config.snap7_slot = parseInt(document.getElementById('f-snap7_slot').value) || 1;
         }
+        const needsOpcua = plcMethod !== 'snap7' && !config.opcua_url;
+        const needsSnap7 = plcMethod === 'snap7' && !config.snap7_host;
+        if ((plcMethod === 'opcua' && needsOpcua) || needsSnap7) { showError('Falta la dirección del PLC.'); return; }
+        if (plcMethod === 'auto' && !config.opcua_url && !config.snap7_host) { showError('En modo auto indica al menos OPC UA URL o Snap7 host.'); return; }
       } else if (agentType === 'scada') {
         const opcuaUrl = document.getElementById('f-scada_opcua_url').value.trim();
         if (!opcuaUrl) { showError('La URL OPC UA es obligatoria.'); return; }
@@ -421,16 +600,14 @@
         };
       }
 
-      const payload = {
-        id: buildId(displayName, plant),
-        display_name: displayName,
-        plant,
-        agent_type: agentType,
-        config,
-      };
-
       try {
-        await api('POST', '/config/targets', payload);
+        if (editingId) {
+          await api('PUT', `/config/targets/${editingId}`, { display_name: displayName, plant, config });
+        } else {
+          await api('POST', '/config/targets', {
+            id: buildId(displayName, plant), display_name: displayName, plant, agent_type: agentType, config,
+          });
+        }
         closeModal();
         loadTargets();
       } catch (e) {
@@ -444,7 +621,163 @@
       el.classList.remove('hidden');
     }
 
-    // Close modal on backdrop click
+    // ── Estado en vivo ───────────────────────────────────────────────────────
+    function statusSection(title, headers, rows) {
+      if (!rows.length) return '';
+      return `
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="px-4 py-3 border-b bg-gray-50 font-medium text-sm text-gray-700">${title}</div>
+          <table class="w-full text-sm">
+            <thead class="text-gray-500 text-xs uppercase border-b">
+              <tr>${headers.map(h => `<th class="px-4 py-2 text-left">${h}</th>`).join('')}</tr>
+            </thead>
+            <tbody>${rows.join('')}</tbody>
+          </table>
+        </div>`;
+    }
+
+    async function loadStatus() {
+      const content = document.getElementById('status-content');
+      try {
+        const [servers, esxi, vms, plcs, scada] = await Promise.all([
+          api('GET', '/metrics/servers/').catch(() => []),
+          api('GET', '/metrics/vmware/hosts').catch(() => []),
+          api('GET', '/metrics/vmware/vms').catch(() => []),
+          api('GET', '/metrics/plcs/siemens').catch(() => []),
+          api('GET', '/metrics/scada/').catch(() => []),
+        ]);
+
+        const sections = [];
+
+        sections.push(statusSection('🖥️ Servidores Windows',
+          ['Equipo', 'Estado', 'CPU', 'RAM', 'Uptime'],
+          servers.map(s => `
+            <tr class="border-t">
+              <td class="px-4 py-2 font-medium">${esc(s.hostname || s.source_id)}<div class="text-xs text-gray-400 font-normal">${esc(s.source_id)}</div></td>
+              <td class="px-4 py-2">${reachableBadge(s.reachable)}</td>
+              <td class="px-4 py-2">${fmt(s.cpu_usage_percent, ' %')}</td>
+              <td class="px-4 py-2">${fmt(s.ram_usage_percent, ' %')} <span class="text-xs text-gray-400">de ${fmt(s.ram_total_gb, ' GB')}</span></td>
+              <td class="px-4 py-2">${s.uptime_seconds ? Math.floor(s.uptime_seconds / 3600) + ' h' : '—'}</td>
+            </tr>`)));
+
+        sections.push(statusSection('🗄️ Hosts ESXi',
+          ['Host', 'Estado', 'CPU', 'RAM', 'VMs', 'Error'],
+          esxi.map(h => `
+            <tr class="border-t">
+              <td class="px-4 py-2 font-medium">${esc(h.hostname || h.source_id)}</td>
+              <td class="px-4 py-2">${reachableBadge(h.reachable)}</td>
+              <td class="px-4 py-2">${fmt(h.cpu_usage_percent, ' %')}</td>
+              <td class="px-4 py-2">${fmt(h.ram_usage_percent, ' %')}</td>
+              <td class="px-4 py-2">${fmt(h.num_vms)}</td>
+              <td class="px-4 py-2 text-xs text-red-500">${esc(h.last_error_text || '')}</td>
+            </tr>`)));
+
+        sections.push(statusSection('📦 Máquinas virtuales',
+          ['VM', 'Host', 'Power', 'CPU', 'RAM', 'Snapshots'],
+          vms.map(v => `
+            <tr class="border-t">
+              <td class="px-4 py-2 font-medium">${esc(v.vm_name || v.source_id)}</td>
+              <td class="px-4 py-2 text-xs text-gray-500">${esc(v.esxi_host || '')}</td>
+              <td class="px-4 py-2">${v.power_state === 'poweredOn'
+                ? '<span class="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">ON</span>'
+                : `<span class="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-500">${esc(v.power_state || '?')}</span>`}</td>
+              <td class="px-4 py-2">${fmt(v.cpu_usage_mhz, ' MHz')}</td>
+              <td class="px-4 py-2">${fmt(v.ram_usage_mb, ' MB')}</td>
+              <td class="px-4 py-2">${fmt(v.num_snapshots)}</td>
+            </tr>`)));
+
+        sections.push(statusSection('⚙️ PLCs Siemens',
+          ['PLC', 'Conexión', 'Estado CPU', 'Memoria carga', 'Memoria trabajo', 'Error'],
+          plcs.map(p => `
+            <tr class="border-t">
+              <td class="px-4 py-2 font-medium">${esc(p.plc_name || p.source_id)}<div class="text-xs text-gray-400 font-normal">${esc(p.collection_method || '')}</div></td>
+              <td class="px-4 py-2">${reachableBadge(p.reachable)}</td>
+              <td class="px-4 py-2">${p.cpu_state
+                ? `<span class="px-2 py-0.5 rounded text-xs font-medium ${p.cpu_state === 'RUN' ? 'bg-green-100 text-green-700' : p.cpu_state === 'STOP' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}">${esc(p.cpu_state)}</span>` : '—'}</td>
+              <td class="px-4 py-2">${fmt(p.load_memory_used_percent, ' %')}</td>
+              <td class="px-4 py-2">${fmt(p.work_memory_used_percent, ' %')}</td>
+              <td class="px-4 py-2 text-xs text-red-500">${esc(p.last_error_text || '')}</td>
+            </tr>`)));
+
+        sections.push(statusSection('📊 Tags SCADA',
+          ['Origen', 'Tag', 'Calidad', 'Valor', 'Conexión'],
+          scada.map(t => `
+            <tr class="border-t">
+              <td class="px-4 py-2 text-xs text-gray-500">${esc(t.source_id)}<div class="text-gray-400">${esc(t.scada_type || '')}</div></td>
+              <td class="px-4 py-2 font-medium">${esc(t.tag_name)}</td>
+              <td class="px-4 py-2"><span class="px-2 py-0.5 rounded text-xs font-medium ${t.quality === 'GOOD' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${esc(t.quality || '?')}</span></td>
+              <td class="px-4 py-2 font-mono text-xs">${fmt(t.value_float ?? t.value_string ?? t.value_bool)}</td>
+              <td class="px-4 py-2">${reachableBadge(t.reachable)}</td>
+            </tr>`)));
+
+        const html = sections.filter(Boolean).join('');
+        content.innerHTML = html || '<div class="text-center text-gray-400 py-10 bg-white rounded-lg shadow">Sin datos en la ventana reciente. Comprueba que hay targets activos y que los agentes escriben (docker compose logs).</div>';
+        document.getElementById('status-updated').textContent = '· actualizado ' + new Date().toLocaleTimeString();
+      } catch (e) {
+        content.innerHTML = `<div class="text-center text-red-500 py-10 bg-white rounded-lg shadow">Error cargando estado: ${esc(e.message)}</div>`;
+      }
+    }
+
+    // ── Recomendaciones IA ───────────────────────────────────────────────────
+    function recCard(analysis, badge = '') {
+      const recs = analysis.recommendations || [];
+      return `
+        <div class="bg-white rounded-lg shadow p-5 space-y-3">
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="px-2 py-0.5 rounded text-xs font-bold uppercase ${RISK_COLORS[analysis.risk_level] || 'bg-gray-100 text-gray-600'}">${esc(analysis.risk_level || '?')}</span>
+            <span class="font-medium">${esc(analysis.summary || '')}</span>
+            ${badge}
+            <span class="ml-auto text-xs text-gray-400">${analysis.generated_at ? new Date(analysis.generated_at).toLocaleString() : ''}</span>
+          </div>
+          ${recs.length ? `
+          <table class="w-full text-sm">
+            <thead class="text-gray-500 text-xs uppercase border-b">
+              <tr><th class="px-2 py-2 text-left">Prioridad</th><th class="px-2 py-2 text-left">Equipo</th><th class="px-2 py-2 text-left">Hallazgo</th><th class="px-2 py-2 text-left">Acción recomendada</th></tr>
+            </thead>
+            <tbody>
+              ${recs.map(r => `
+                <tr class="border-t align-top">
+                  <td class="px-2 py-2"><span class="px-2 py-0.5 rounded text-xs font-medium ${RISK_COLORS[r.priority] || 'bg-gray-100 text-gray-600'}">${esc(r.priority || '?')}</span></td>
+                  <td class="px-2 py-2 font-mono text-xs">${esc(r.source_id || '')}</td>
+                  <td class="px-2 py-2">${esc(r.finding || '')}</td>
+                  <td class="px-2 py-2 text-gray-600">${esc(r.action || '')}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>` : '<div class="text-sm text-gray-400">Sin recomendaciones en este análisis.</div>'}
+        </div>`;
+    }
+
+    async function loadRecommendations() {
+      const content = document.getElementById('recs-content');
+      try {
+        const analyses = await api('GET', '/recommendations/latest');
+        content.innerHTML = analyses.length
+          ? analyses.map(a => recCard(a)).join('')
+          : '<div class="text-center text-gray-400 py-10 bg-white rounded-lg shadow">Aún no hay análisis. El agente genera uno cada 15 minutos, o pulsa "Analizar ahora".</div>';
+      } catch (e) {
+        content.innerHTML = `<div class="text-center text-red-500 py-10 bg-white rounded-lg shadow">Error: ${esc(e.message)}</div>`;
+      }
+    }
+
+    async function runAnalyze() {
+      const btn = document.getElementById('analyze-btn');
+      const content = document.getElementById('recs-content');
+      btn.disabled = true;
+      btn.textContent = '⏳ Analizando (puede tardar 1–3 min)...';
+      try {
+        const result = await api('POST', '/recommendations/analyze');
+        result.generated_at = result.generated_at || new Date().toISOString();
+        content.innerHTML = recCard(result,
+          '<span class="px-2 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700">análisis puntual</span>') + content.innerHTML;
+      } catch (e) {
+        alert('Error en el análisis: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '▶ Analizar ahora';
+      }
+    }
+
+    // Cerrar modal al pulsar el fondo
     document.getElementById('modal').addEventListener('click', e => {
       if (e.target === document.getElementById('modal')) closeModal();
     });

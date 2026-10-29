@@ -81,3 +81,27 @@ def test_winrm_invalid_json_returns_unreachable():
     metric = _collector(module).collect()[0]
 
     assert metric.reachable is False
+
+
+def test_winrm_injects_critical_services_into_script():
+    module = _module(_Result(0, b"{}"))
+    collector = module.WindowsWinRMCollector({
+        "id": "srv-1",
+        "hostname": "win-host",
+        "critical_services": ["W32Time", "Spooler", "o'brien"],
+    })
+
+    script = collector._build_script()
+
+    assert "$svcNames = @('W32Time','Spooler','o''brien')" in script
+    assert "__CRITICAL_SERVICES__" not in script
+    assert "$env:CRITICAL_SERVICES" not in script
+
+
+def test_winrm_empty_services_build_empty_array():
+    module = _module(_Result(0, b"{}"))
+    collector = module.WindowsWinRMCollector({"id": "srv-1", "hostname": "win-host"})
+
+    script = collector._build_script()
+
+    assert "$svcNames = @()" in script

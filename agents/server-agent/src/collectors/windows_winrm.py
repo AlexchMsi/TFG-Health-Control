@@ -44,8 +44,11 @@ try {
     if ($ntpRaw -match 'RMS Offset:\s+([\d.]+)\s*s') { $offsetMs = [math]::Round([double]$matches[1] * 1000, 2) }
     $ntpServer = if ($ntpRaw -match 'Source:\s+(.+)') { $matches[1].Trim() } else { '' }
 
-    $svcNames = $env:CRITICAL_SERVICES -split ','
-    $services = if ($svcNames) {
+    # __CRITICAL_SERVICES__ is replaced client-side with a PS array literal:
+    # remote env vars are not propagated by run_ps, so interpolation is the
+    # only way the list reaches this script.
+    $svcNames = @(__CRITICAL_SERVICES__)
+    $services = if ($svcNames.Count -gt 0) {
         Get-Service -Name $svcNames -ErrorAction SilentlyContinue |
             Select-Object Name, DisplayName,
                           @{N='State';E={$_.Status.ToString()}},
@@ -79,23 +82,27 @@ class WindowsWinRMCollector(AbstractCollector):
         self.user: str = target_config.get("winrm_user", "")
         self.password: str = target_config.get("winrm_password", "")
         self.transport: str = target_config.get("winrm_transport", "ntlm")
+        self.port: int = int(target_config.get("winrm_port", 5985))
         self.critical_services: list[str] = target_config.get("critical_services", [])
         self.display_name: str = target_config.get("display_name", self.target_id)
 
+    def _build_script(self) -> str:
+        svc_literal = ",".join(
+            "'" + s.replace("'", "''") + "'" for s in self.critical_services if s
+        )
+        return _PS_SCRIPT.replace("__CRITICAL_SERVICES__", svc_literal)
+
     def collect(self) -> list[WindowsServerMetric]:
         try:
+            scheme = "https" if self.port == 5986 else "http"
             session = winrm.Session(
-                f"http://{self.hostname}:5985/wsman",
+                f"{scheme}://{self.hostname}:{self.port}/wsman",
                 auth=(self.user, self.password),
                 transport=self.transport,
                 read_timeout_sec=30,
                 operation_timeout_sec=25,
             )
-            env_vars = {}
-            if self.critical_services:
-                env_vars["CRITICAL_SERVICES"] = ",".join(self.critical_services)
-
-            result = session.run_ps(_PS_SCRIPT)
+            result = session.run_ps(self._build_script())
             if result.status_code != 0:
                 raise RuntimeError(result.std_err.decode(errors="replace"))
 
