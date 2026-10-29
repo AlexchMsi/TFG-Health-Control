@@ -75,7 +75,9 @@ class Snap7Collector:
             self._read_memory(client, metric)
             self._read_diagnostics(client, metric)
 
-            metric.reachable = metric.cpu_state == "RUN"
+            # reachable == the S7Comm connection and SZL reads worked; a PLC in
+            # STOP is still reachable. cpu_state carries the operating mode.
+            metric.reachable = True
         except Exception as exc:
             logger.error("Snap7 collect error [%s]: %s", self._source_id, exc)
             metric.reachable = False

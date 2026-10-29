@@ -47,7 +47,12 @@ class ConfigPoller:
         self._scheduler = scheduler
         self._aps = aps_scheduler
         self._poll_every = poll_every
-        self._known_ids: set[str] = set()
+        # id -> updated_at (opaque string from the API). Tracking updated_at
+        # lets a PUT that changes an existing target's config propagate: the
+        # target is re-added and the agent's add_job(replace_existing=True)
+        # replaces the job in place. Side effect: a re-add restarts the
+        # interval timer (at most one polling cycle is lost).
+        self._known: dict[str, str | None] = {}
 
     def start(self) -> None:
         self._sync()  # immediate first run
@@ -80,12 +85,20 @@ class ConfigPoller:
         active_ids = {t["id"] for t in targets if t["enabled"]}
 
         for target in targets:
-            if target["enabled"] and target["id"] not in self._known_ids:
-                logger.info("ConfigPoller: adding target %s", target["id"])
-                self._scheduler.add_target(target)
-                self._known_ids.add(target["id"])
+            if not target["enabled"]:
+                continue
+            target_id = target["id"]
+            stamp = target.get("updated_at")
+            if target_id not in self._known:
+                logger.info("ConfigPoller: adding target %s", target_id)
+            elif self._known[target_id] != stamp:
+                logger.info("ConfigPoller: updating target %s (config changed)", target_id)
+            else:
+                continue
+            self._scheduler.add_target(target)
+            self._known[target_id] = stamp
 
-        for removed_id in self._known_ids - active_ids:
+        for removed_id in set(self._known) - active_ids:
             logger.info("ConfigPoller: removing target %s", removed_id)
             self._scheduler.remove_target(removed_id)
-            self._known_ids.discard(removed_id)
+            self._known.pop(removed_id, None)

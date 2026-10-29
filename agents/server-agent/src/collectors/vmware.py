@@ -52,7 +52,18 @@ class VMwareCollector(AbstractCollector):
             return metrics
         except Exception as exc:
             logger.error("vmware_collection_failed host=%s error=%s", self.host, exc)
-            return []
+            # Total connection failure: emit one explicit unreachable metric so
+            # Grafana/API can alert on reachable == 0 instead of silently losing
+            # data. source_id uses the configured host (no _moId available here);
+            # on recovery hosts write again as esxi-{_moId} — separate series,
+            # accepted for the prototype.
+            return [ESXiHostMetric(
+                source_id=f"esxi-{self.host}",
+                source_type="esxi_host",
+                hostname=self.host,
+                reachable=False,
+                last_error_text=str(exc),
+            )]
         finally:
             if self._si:
                 Disconnect(self._si)

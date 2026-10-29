@@ -1,6 +1,7 @@
 influxdb-client==1.44.0
 asyncua==1.0.6
 python-snap7==1.3
+setuptools>=69  # python-snap7 1.3 imports pkg_resources, absent from python:3.12 images
 APScheduler==3.10.4
 pydantic-settings==2.2.1
 tenacity==8.2.3

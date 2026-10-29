@@ -149,27 +149,31 @@ class AgentScheduler:
         )
 
     def _write_esxi(self, m: ESXiHostMetric, ts: datetime) -> None:
+        fields = {
+            "cpu_usage_percent": m.cpu_usage_percent,
+            "cpu_used_mhz": m.cpu_used_mhz,
+            "cpu_total_mhz": m.cpu_total_mhz,
+            "ram_total_gb": m.ram_total_gb,
+            "ram_used_gb": m.ram_used_gb,
+            "ram_usage_percent": m.ram_usage_percent,
+            "uptime_seconds": m.uptime_seconds,
+            "connection_state": m.connection_state,
+            "maintenance_mode": int(m.maintenance_mode),
+            "num_vms": m.num_vms,
+            "reachable": int(m.reachable),
+        }
+        if m.last_error_text:
+            fields["last_error_text"] = m.last_error_text
         self._writer.write_point(
             measurement="esxi_health",
             tags={
                 "source_id": m.source_id,
                 "source_type": m.source_type,
                 "hostname": m.hostname,
-                "version": m.version,
+                # Empty tags are dropped by the client and break the API pivot.
+                "version": m.version or "unknown",
             },
-            fields={
-                "cpu_usage_percent": m.cpu_usage_percent,
-                "cpu_used_mhz": m.cpu_used_mhz,
-                "cpu_total_mhz": m.cpu_total_mhz,
-                "ram_total_gb": m.ram_total_gb,
-                "ram_used_gb": m.ram_used_gb,
-                "ram_usage_percent": m.ram_usage_percent,
-                "uptime_seconds": m.uptime_seconds,
-                "connection_state": m.connection_state,
-                "maintenance_mode": int(m.maintenance_mode),
-                "num_vms": m.num_vms,
-                "reachable": int(m.reachable),
-            },
+            fields=fields,
             timestamp=ts,
         )
 
@@ -181,7 +185,8 @@ class AgentScheduler:
                 "source_type": m.source_type,
                 "vm_name": m.vm_name,
                 "esxi_host": m.esxi_host,
-                "guest_os": m.guest_os,
+                # Empty tags are dropped by the client and break the API pivot.
+                "guest_os": m.guest_os or "unknown",
             },
             fields={
                 "power_state": m.power_state,

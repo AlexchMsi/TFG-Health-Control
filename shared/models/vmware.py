@@ -24,6 +24,7 @@ class ESXiHostMetric(BaseMetric):
     connection_state: str = ""      # "connected", "disconnected", "notResponding"
     maintenance_mode: bool = False
     num_vms: int = 0
+    last_error_text: str = ""       # Set when the vCenter/ESXi connection fails
 
 
 @dataclass

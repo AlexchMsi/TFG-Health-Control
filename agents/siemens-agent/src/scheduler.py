@@ -65,8 +65,9 @@ class AgentScheduler:
         self._write(metric)
 
     def _collect(self, target: dict, method: str) -> SiemensPlcMetric:
+        # Imports deferred per method: a broken/missing protocol library must
+        # not take down collection for targets that use the other protocol.
         from .collectors.opcua_collector import OpcuaCollector
-        from .collectors.snap7_collector import Snap7Collector
 
         cfg = target["config"]
 
@@ -74,16 +75,20 @@ class AgentScheduler:
             return OpcuaCollector(target).collect()
 
         if method == "snap7":
+            from .collectors.snap7_collector import Snap7Collector
             return Snap7Collector(target).collect()
 
-        # method == "auto": try OPC UA first, fall back to Snap7
+        # method == "auto": try OPC UA first, fall back to Snap7 only when the
+        # OPC UA *connection* failed (reachable=False). A reachable PLC in STOP
+        # is a valid result and must not trigger the fallback.
         if cfg.get("opcua_url"):
             m = OpcuaCollector(target).collect()
             if m.reachable:
                 return m
-            logger.debug("OPC UA unreachable for %s — trying Snap7 fallback", target["id"])
+            logger.debug("OPC UA connection failed for %s — trying Snap7 fallback", target["id"])
 
         if cfg.get("snap7_host"):
+            from .collectors.snap7_collector import Snap7Collector
             return Snap7Collector(target).collect()
 
         # Neither configured
@@ -98,12 +103,15 @@ class AgentScheduler:
         )
 
     def _write(self, metric: SiemensPlcMetric) -> None:
+        # Empty tag values are dropped by the InfluxDB client, which would make
+        # the API's pivot (rowKey includes model/firmware) return no rows.
+        # Write a stable placeholder instead.
         tags = {
             "source_id": metric.source_id,
             "plc_name": metric.plc_name,
             "plant": metric.plant,
-            "model": metric.model,
-            "firmware": metric.firmware,
+            "model": metric.model or "unknown",
+            "firmware": metric.firmware or "unknown",
             "collection_method": metric.collection_method,
         }
         fields = {

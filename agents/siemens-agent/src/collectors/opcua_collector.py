@@ -25,6 +25,11 @@ logger = logging.getLogger(__name__)
 _SERVER_STATE_NODE = "ns=0;i=2259"   # 0=Running, 1=Failed, 2=NoConfig, 3=Suspended, 4=Shutdown, 5=Test, 6=CommunicationFault, 7=Unknown
 _SERVER_TIME_NODE = "ns=0;i=2258"    # ServerStatus.CurrentTime
 
+# NOTE: cpu_state is derived from ServerStatus.State of the OPC UA *server*,
+# not from the physical CPU operating mode. On an S7-1500 native server they
+# usually match; behind a gateway (Ignition/WinCC) it reflects the gateway's
+# server state. Pending validation against real hardware.
+
 _OPC_STATE_MAP = {
     0: "RUN",
     1: "FAULT",
@@ -95,7 +100,9 @@ class OpcuaCollector:
             state_code = await _read_node_safe(client, _SERVER_STATE_NODE, default=7)
             metric.cpu_state_code = int(state_code)
             metric.cpu_state = _OPC_STATE_MAP.get(metric.cpu_state_code, "FAULT")
-            metric.reachable = metric.cpu_state == "RUN"
+            # reachable == the OPC UA connection worked; a PLC in STOP/FAULT is
+            # still reachable. Connection failures are handled in collect().
+            metric.reachable = True
 
             # Optional: try to read Siemens-specific nodes (S7-1500 native server)
             # Module state — ns=3 path varies by PLC name; skip silently if not found
