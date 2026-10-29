@@ -1,0 +1,411 @@
+<title>Planning TFG Nov–Dic</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: una columna de lectura; el Gantt es el protagonista, en banda ancha con scroll propio */
+  :root {
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --ring: rgba(11, 11, 11, 0.10);
+    --c-campo: #2a78d6;    /* validación en campo */
+    --c-plata: #eb6834;    /* plataforma / código */
+    --c-memoria: #1baf7a;  /* memoria */
+    --c-entrega: #eda100;  /* entrega y buffer */
+    --display: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    --body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+      --c-campo: #3987e5; --c-plata: #d95926; --c-memoria: #199e70; --c-entrega: #c98500;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+    --c-campo: #3987e5; --c-plata: #d95926; --c-memoria: #199e70; --c-entrega: #c98500;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.55;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 0 56px;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; }
+  .prose { max-width: 70ch; }
+
+  /* ── Cabecera ── */
+  header.top { padding-block: 40px 28px; border-bottom: 1px solid var(--grid); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-2); margin: 0 0 10px;
+  }
+  h1 {
+    font-family: var(--display); font-weight: 700; font-size: clamp(26px, 4.5vw, 38px);
+    line-height: 1.12; margin: 0 0 10px; text-wrap: balance;
+  }
+  .lede { color: var(--ink-2); margin: 0; }
+
+  /* ── Franja de datos clave ── */
+  .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--grid); border: 1px solid var(--grid); margin-top: 28px; }
+  .fact { background: var(--surface); padding: 14px 16px; }
+  .fact .k { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 4px; }
+  .fact .v { font-family: var(--display); font-weight: 600; font-size: 17px; }
+  @media (max-width: 720px) { .facts { grid-template-columns: repeat(2, 1fr); } }
+
+  h2 {
+    font-family: var(--display); font-weight: 600; font-size: 20px;
+    margin: 44px 0 6px; text-wrap: balance;
+  }
+  h2 .num { font-family: var(--mono); font-weight: 400; font-size: 13px; color: var(--muted); margin-right: 10px; }
+  .sub { color: var(--ink-2); margin: 0 0 18px; max-width: 70ch; }
+
+  /* ── Gantt ── */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px 22px; margin: 0 0 14px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-2); }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+
+  .gantt-scroll { overflow-x: auto; border: 1px solid var(--grid); background: var(--surface); }
+  .gantt { display: grid; grid-template-columns: 218px 1fr; min-width: 880px; }
+  .g-left { border-right: 1px solid var(--axis); position: sticky; left: 0; background: var(--surface); z-index: 3; }
+  .g-left, .g-right { display: flex; flex-direction: column; }
+  .g-right { position: relative; }
+
+  .hdr { height: 54px; display: flex; align-items: center; }
+  .g-left .hdr { padding-left: 14px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--axis); }
+  .weeks { display: grid; grid-template-columns: repeat(8, 1fr); width: 100%; height: 100%; border-bottom: 1px solid var(--axis); }
+  .wk { padding: 8px 8px 6px; border-left: 1px solid var(--grid); }
+  .wk:first-child { border-left: none; }
+  .wk b { display: block; font-family: var(--display); font-weight: 600; font-size: 12.5px; }
+  .wk small { font-family: var(--mono); font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+
+  .row { height: 44px; display: flex; align-items: center; border-bottom: 1px solid var(--grid); }
+  .row:last-child { border-bottom: none; }
+  .g-left .row { padding: 0 14px; font-size: 13px; line-height: 1.25; }
+  .g-left .row .dur { font-family: var(--mono); font-size: 10.5px; color: var(--muted); margin-left: auto; padding-left: 8px; flex: none; }
+
+  .grp { height: 30px; display: flex; align-items: center; background: color-mix(in srgb, var(--grid) 38%, var(--surface)); border-bottom: 1px solid var(--grid); }
+  .g-left .grp { padding: 0 14px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); gap: 7px; }
+  .grp .swatch { width: 9px; height: 9px; }
+
+  /* rejilla vertical de semanas sobre el área de dibujo */
+  .plotgrid { position: absolute; inset: 54px 0 0 0; pointer-events: none;
+    background-image: repeating-linear-gradient(to right, transparent 0, transparent calc(12.5% - 1px), var(--grid) calc(12.5% - 1px), var(--grid) 12.5%);
+  }
+
+  .lane { position: relative; width: 100%; height: 100%; }
+  .bar {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    height: 20px; border-radius: 4px; cursor: default;
+    box-shadow: 0 0 0 2px var(--surface); /* separador de 2px sobre la superficie */
+    transition: filter 0.12s ease;
+  }
+  .bar:hover, .bar:focus-visible { filter: brightness(1.12); outline: none; }
+  .bar:focus-visible { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+  .bar.cond { opacity: 0.55; border: 1.5px dashed var(--ink-2); box-sizing: border-box; }
+
+  /* hitos */
+  .m-row { height: 34px; position: relative; border-bottom: 1px solid var(--grid); }
+  .g-left .m-row { display: flex; align-items: center; padding: 0 14px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+  .mstone { position: absolute; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 6px; }
+  .mstone .dia { width: 9px; height: 9px; background: var(--ink); transform: rotate(45deg); flex: none; }
+  .mstone .mlabel { font-family: var(--mono); font-size: 10.5px; color: var(--ink-2); white-space: nowrap; }
+
+  .freeze { position: absolute; top: 54px; bottom: 0; width: 0; border-left: 2px dashed var(--ink-2); z-index: 2; pointer-events: none; }
+  .freeze em { position: absolute; top: 4px; left: 6px; font-style: normal; font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); background: var(--surface); padding: 1px 5px; border: 1px solid var(--grid); white-space: nowrap; }
+
+  .holiday { position: absolute; top: 54px; bottom: 0; background: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in srgb, var(--muted) 22%, transparent) 5px 7px); pointer-events: none; }
+
+  .gantt-foot { display: flex; flex-wrap: wrap; gap: 6px 24px; font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 10px 2px 0; }
+
+  /* tooltip */
+  #tip { position: fixed; z-index: 50; max-width: 280px; background: var(--ink); color: var(--page);
+    font-size: 12.5px; line-height: 1.45; padding: 8px 11px; border-radius: 6px; pointer-events: none; display: none; }
+  #tip b { display: block; font-family: var(--display); }
+  #tip .d { font-family: var(--mono); font-size: 11px; opacity: 0.75; }
+
+  /* ── Hitos ── */
+  .miles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 860px) { .miles { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .miles { grid-template-columns: 1fr; } }
+  .mile { background: var(--surface); border: 1px solid var(--grid); border-top: 3px solid var(--ink); padding: 13px 15px; }
+  .mile .tag { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; margin-bottom: 5px; }
+  .mile b { font-family: var(--display); font-weight: 600; font-size: 14.5px; display: block; margin-bottom: 3px; }
+  .mile p { margin: 0; font-size: 12.5px; color: var(--ink-2); }
+
+  /* ── Tablas ── */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--grid); }
+  table { border-collapse: collapse; width: 100%; background: var(--surface); font-size: 13.5px; }
+  th { font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); text-align: left; font-weight: 500; }
+  th, td { padding: 9px 13px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { font-family: var(--mono); font-size: 12px; white-space: nowrap; color: var(--ink-2); }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 7px; vertical-align: 1px; }
+
+  /* ── Decisiones y reglas ── */
+  ol.decide { margin: 0; padding-left: 22px; max-width: 70ch; }
+  ol.decide li { margin-bottom: 9px; }
+  ol.decide li::marker { font-family: var(--mono); color: var(--muted); }
+
+  .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 720px) { .rules { grid-template-columns: 1fr; } }
+  .rule { background: var(--surface); border: 1px solid var(--grid); padding: 15px 17px; }
+  .rule b { font-family: var(--display); font-weight: 600; display: block; margin-bottom: 5px; }
+  .rule p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+
+  footer { margin-top: 48px; padding-top: 14px; border-top: 1px solid var(--grid);
+    font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+
+  @media (prefers-reduced-motion: reduce) { .bar { transition: none; } }
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="eyebrow">TFG · Control System Health Status · GEA Process Engineering</p>
+    <h1>Planning noviembre–diciembre 2026</h1>
+    <p class="lede prose">Dos días de trabajo por semana, dieciséis jornadas reales hasta fin de año. Noviembre valida y cierra la plataforma; diciembre es para escribir la memoria.</p>
+
+    <div class="facts">
+      <div class="fact"><span class="k">Jornadas disponibles</span><span class="v">≈ 16 días</span></div>
+      <div class="fact"><span class="k">Feature freeze</span><span class="v">23 nov</span></div>
+      <div class="fact"><span class="k">Borrador completo</span><span class="v">14 dic</span></div>
+      <div class="fact"><span class="k">Entrega a tutores</span><span class="v">21 dic</span></div>
+    </div>
+  </header>
+
+  <h2><span class="num">01</span>Diagrama de Gantt</h2>
+  <p class="sub">Cada semana tiene dos jornadas (D1 y D2). Pasa el cursor por una barra para ver el detalle. La línea discontinua marca el cierre de funcionalidades: a partir de ahí, solo correcciones y memoria.</p>
+
+  <div class="legend" role="list">
+    <span role="listitem"><i class="swatch" style="background:var(--c-campo)"></i>Validación en campo</span>
+    <span role="listitem"><i class="swatch" style="background:var(--c-plata)"></i>Plataforma</span>
+    <span role="listitem"><i class="swatch" style="background:var(--c-memoria)"></i>Memoria</span>
+    <span role="listitem"><i class="swatch" style="background:var(--c-entrega)"></i>Entrega y buffer</span>
+  </div>
+
+  <div class="gantt-scroll">
+    <div class="gantt">
+      <div class="g-left">
+        <div class="hdr">Tarea</div>
+        <div class="m-row">Hitos</div>
+        <div class="grp"><i class="swatch" style="background:var(--c-campo)"></i>Validación en campo</div>
+        <div class="row"><span>Prueba real en umbrella (tutorial completo)</span><span class="dur">2 d</span></div>
+        <div class="grp"><i class="swatch" style="background:var(--c-plata)"></i>Plataforma</div>
+        <div class="row"><span>Correcciones tras la prueba real</span><span class="dur">1 d</span></div>
+        <div class="row"><span>Seguridad mínima de la API</span><span class="dur">1 d</span></div>
+        <div class="row"><span>Alertas Grafana → email/Teams <small style="color:var(--muted)">(si entran)</small></span><span class="dur">2 d</span></div>
+        <div class="grp"><i class="swatch" style="background:var(--c-memoria)"></i>Memoria</div>
+        <div class="row"><span>Consolidar versiones + capítulos de contexto</span><span class="dur">2 d</span></div>
+        <div class="row"><span>Arquitectura e implementación</span><span class="dur">2 d</span></div>
+        <div class="row"><span>Pruebas, resultados y conclusiones</span><span class="dur">2 d</span></div>
+        <div class="grp"><i class="swatch" style="background:var(--c-entrega)"></i>Entrega y buffer</div>
+        <div class="row"><span>Figuras, referencias, revisión y envío</span><span class="dur">2 d</span></div>
+        <div class="row"><span>Buffer: correcciones de tutores y demo</span><span class="dur">2 d</span></div>
+      </div>
+
+      <div class="g-right">
+        <div class="hdr">
+          <div class="weeks">
+            <div class="wk"><b>S1</b><small>3–9 nov</small></div>
+            <div class="wk"><b>S2</b><small>10–16 nov</small></div>
+            <div class="wk"><b>S3</b><small>17–23 nov</small></div>
+            <div class="wk"><b>S4</b><small>24–30 nov</small></div>
+            <div class="wk"><b>S5</b><small>1–7 dic</small></div>
+            <div class="wk"><b>S6</b><small>8–14 dic</small></div>
+            <div class="wk"><b>S7</b><small>15–21 dic</small></div>
+            <div class="wk"><b>S8</b><small>22–28 dic</small></div>
+          </div>
+        </div>
+
+        <div class="plotgrid" aria-hidden="true"></div>
+        <div class="holiday" style="left:60.9%; width:3.2%" aria-hidden="true"></div>
+        <div class="holiday" style="left:91.5%; width:3.2%" aria-hidden="true"></div>
+        <div class="freeze" style="left:37.5%" aria-hidden="true"><em>feature freeze · 23 nov</em></div>
+
+        <div class="m-row">
+          <div class="mstone" style="left:12.5%"><span class="dia"></span><span class="mlabel">M1</span></div>
+          <div class="mstone" style="left:37.5%"><span class="dia"></span><span class="mlabel">M2</span></div>
+          <div class="mstone" style="left:75%"><span class="dia"></span><span class="mlabel">M3</span></div>
+          <div class="mstone" style="left:87.5%"><span class="dia"></span><span class="mlabel">M4</span></div>
+        </div>
+
+        <div class="grp"></div>
+        <div class="row"><div class="lane">
+          <div class="bar" tabindex="0" style="left:0%; width:12.5%; background:var(--c-campo)"
+            data-t="Prueba real en umbrella" data-d="S1 · D1–D2 · 3–9 nov"
+            data-x="D1: despliegue + simuladores + estación SNMP. D2: WinRM y PLC/SCADA real si hay permiso OT. Capturar evidencias con hora."></div>
+        </div></div>
+
+        <div class="grp"></div>
+        <div class="row"><div class="lane">
+          <div class="bar" tabindex="0" style="left:12.5%; width:6.25%; background:var(--c-plata)"
+            data-t="Correcciones tras la prueba real" data-d="S2 · D1 · 10–16 nov"
+            data-x="Arreglar lo que haya fallado en umbrella: timeouts, firewall, parseos. Siempre sale algo."></div>
+        </div></div>
+        <div class="row"><div class="lane">
+          <div class="bar" tabindex="0" style="left:18.75%; width:6.25%; background:var(--c-plata)"
+            data-t="Seguridad mínima de la API" data-d="S2 · D2 · 10–16 nov"
+            data-x="API key en endpoints de escritura, no devolver contraseñas en los GET de targets, fijar dependencias sueltas. Con tests."></div>
+        </div></div>
+        <div class="row"><div class="lane">
+          <div class="bar cond" tabindex="0" style="left:25%; width:12.5%; background:var(--c-plata)"
+            data-t="Alertas Grafana (condicional)" data-d="S3 · D1–D2 · 17–23 nov"
+            data-x="Solo si el tutor confirma que entran en el alcance: reglas sobre reachable=0, disco >90 %, servicio parado → email/Teams. Si no entran, se adelanta la memoria una semana."></div>
+        </div></div>
+
+        <div class="grp"></div>
+        <div class="row"><div class="lane">
+          <div class="bar" tabindex="0" style="left:37.5%; width:12.5%; background:var(--c-memoria)"
+            data-t="Consolidar versiones + contexto" data-d="S4 · D1–D2 · 24–30 nov"
+            data-x="Las 6 versiones .docx se funden en UNA sobre la plantilla oficial. Índice definitivo. Capítulos de problema, objetivos y estado del arte."></div>
+        </div></div>
+        <div class="row"><div class="lane">
+          <div class="bar" tabindex="0" style="left:50%; width:12.5%; background:var(--c-memoria)"
+            data-t="Arquitectura e implementación" data-d="S5 · D1–D2 · 1–7 dic"
+            data-x="Diagramas de flujo de datos, decisiones de diseño, implementación por componente. Trabajar antes del puente del 7–8."></div>
+        </div></div>
+        <div class="row"><div class="lane">
+          <div class="bar" tabindex="0" style="left:62.5%; width:12.5%; background:var(--c-memoria)"
+            data-t="Pruebas, resultados y conclusiones" data-d="S6 · D1–D2 · 8–14 dic"
+            data-x="Metodología (89 tests + validación end-to-end), resultados con evidencias de umbrella, limitaciones, conclusiones, ética y trabajo futuro."></div>
+        </div></div>
+
+        <div class="grp"></div>
+        <div class="row"><div class="lane">
+          <div class="bar" tabindex="0" style="left:75%; width:12.5%; background:var(--c-entrega)"
+            data-t="Acabado y envío a tutores" data-d="S7 · D1–D2 · 15–21 dic"
+            data-x="Figuras numeradas, tablas, índices, referencias, anexos, lectura completa. Envío a Roque y Jaime antes de Navidad."></div>
+        </div></div>
+        <div class="row"><div class="lane">
+          <div class="bar cond" tabindex="0" style="left:87.5%; width:12.5%; background:var(--c-entrega)"
+            data-t="Buffer" data-d="S8 · 22–28 dic"
+            data-x="Correcciones de tutores si llegan y guion de demo. Es colchón, no plan: nada crítico puede vivir aquí."></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+  <div class="gantt-foot">
+    <span>◆ hito</span>
+    <span>barra discontinua = condicional / colchón</span>
+    <span>rayado = festivos: puente 7–8 dic · Navidad 25 dic</span>
+  </div>
+
+  <h2><span class="num">02</span>Hitos</h2>
+  <div class="miles">
+    <div class="mile">
+      <span class="tag"><span>M1</span><span>9 nov</span></span>
+      <b>Sistema validado en umbrella</b>
+      <p>Con equipos reales, o con simuladores más fecha comprometida para la ventana OT.</p>
+    </div>
+    <div class="mile">
+      <span class="tag"><span>M2</span><span>23 nov</span></span>
+      <b>Feature freeze</b>
+      <p>Plataforma cerrada. Todo lo nuevo que se ocurra después va al capítulo de trabajo futuro.</p>
+    </div>
+    <div class="mile">
+      <span class="tag"><span>M3</span><span>14 dic</span></span>
+      <b>Borrador completo de la memoria</b>
+      <p>Todos los capítulos escritos. Lo que falte aquí ya no entra sin sacrificar revisión.</p>
+    </div>
+    <div class="mile">
+      <span class="tag"><span>M4</span><span>21 dic</span></span>
+      <b>Memoria enviada a tutores</b>
+      <p>Revisada y con los datos de portada confirmados, antes de Navidad.</p>
+    </div>
+  </div>
+
+  <h2><span class="num">03</span>Decisiones a confirmar con los tutores (semana 1, por email)</h2>
+  <ol class="decide">
+    <li><b>Convocatoria y fecha límite exacta</b> de entrega y defensa — todo el calendario cuelga de esto.</li>
+    <li><b>Alcance</b>: ¿el agente Rockwell y la monitorización de red entran, o son trabajo futuro? ¿Las alertas operativas son obligatorias?</li>
+    <li><b>Documento principal de la memoria</b>: cuál de las seis versiones .docx manda, antes de escribir una línea nueva.</li>
+  </ol>
+
+  <h2><span class="num">04</span>Semana a semana</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Semana</th><th>Foco</th><th>Hito</th></tr></thead>
+      <tbody>
+        <tr><td>S1 · 3–9 nov</td><td><i class="dot" style="background:var(--c-campo)"></i>Prueba en umbrella: despliegue, simuladores, estación SNMP; WinRM y PLC real si hay permiso. Evidencias con hora.</td><td>M1</td></tr>
+        <tr><td>S2 · 10–16 nov</td><td><i class="dot" style="background:var(--c-plata)"></i>Correcciones de la prueba real + API key en escritura, contraseñas fuera de los GET, dependencias fijadas.</td><td>—</td></tr>
+        <tr><td>S3 · 17–23 nov</td><td><i class="dot" style="background:var(--c-plata)"></i>Alertas Grafana si el tutor las confirma; si no, se adelanta la memoria. Cierre de funcionalidades.</td><td>M2</td></tr>
+        <tr><td>S4 · 24–30 nov</td><td><i class="dot" style="background:var(--c-memoria)"></i>Memoria I: consolidar las 6 versiones en una, índice cerrado, capítulos de contexto.</td><td>—</td></tr>
+        <tr><td>S5 · 1–7 dic</td><td><i class="dot" style="background:var(--c-memoria)"></i>Memoria II: arquitectura, decisiones e implementación. Jornadas antes del puente.</td><td>—</td></tr>
+        <tr><td>S6 · 8–14 dic</td><td><i class="dot" style="background:var(--c-memoria)"></i>Memoria III: pruebas, resultados con evidencias, limitaciones, conclusiones, ética.</td><td>M3</td></tr>
+        <tr><td>S7 · 15–21 dic</td><td><i class="dot" style="background:var(--c-entrega)"></i>Figuras, índices, referencias, anexos, revisión completa y envío a los tutores.</td><td>M4</td></tr>
+        <tr><td>S8 · 22–28 dic</td><td><i class="dot" style="background:var(--c-entrega)"></i>Buffer navideño: correcciones y guion de demo.</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2><span class="num">05</span>Riesgos y plan B</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Riesgo</th><th>Mitigación</th></tr></thead>
+      <tbody>
+        <tr><td>Sin acceso a PLC real en noviembre</td><td>Resultados con el simulador OPC UA y PLCSIM, presentados como tales; ventana OT para enero. La memoria no se bloquea por hardware.</td></tr>
+        <tr><td>Umbrella sin recursos para Ollama</td><td>Stack sin IA en umbrella; la demo de recomendaciones se hace en el PC de desarrollo.</td></tr>
+        <tr><td>Scope creep</td><td>Feature freeze el 23 de noviembre. Rockwell, red y reporting van a trabajo futuro salvo que el tutor diga lo contrario.</td></tr>
+        <tr><td>Las 6 memorias se contradicen</td><td>Un día entero de consolidación (S4·D1) antes de escribir nada nuevo.</td></tr>
+        <tr><td>Puente y Navidad se comen diciembre</td><td>El borrador completo es el 14, no el 21. S8 es colchón, no plan.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2><span class="num">06</span>Las dos reglas</h2>
+  <div class="rules">
+    <div class="rule">
+      <b>Congelar el 23 de noviembre</b>
+      <p>El riesgo número uno ya no es técnico: es quedarse sin diciembre. Cada funcionalidad nueva después del freeze se anota en trabajo futuro y no se toca el código.</p>
+    </div>
+    <div class="rule">
+      <b>La memoria no espera al hardware</b>
+      <p>Si el acceso OT se retrasa, los resultados se documentan con simulador indicando la limitación. El 14 de diciembre hay borrador completo, pase lo que pase en planta.</p>
+    </div>
+  </div>
+
+  <footer>Estado de partida (30 oct): plataforma validada end-to-end en local · 89 tests · UI completa · rama develop</footer>
+</div>
+
+<div id="tip" role="status"></div>
+
+<script>
+  const tip = document.getElementById('tip');
+  function showTip(el, x, y) {
+    tip.innerHTML = '<b></b><span class="d"></span><div class="x"></div>';
+    tip.querySelector('b').textContent = el.dataset.t;
+    tip.querySelector('.d').textContent = el.dataset.d;
+    tip.querySelector('.x').textContent = el.dataset.x;
+    tip.style.display = 'block';
+    const r = tip.getBoundingClientRect();
+    let left = Math.min(Math.max(8, x + 14), window.innerWidth - r.width - 8);
+    let top = y + 16;
+    if (top + r.height > window.innerHeight - 8) top = y - r.height - 10;
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+  document.querySelectorAll('.bar').forEach(bar => {
+    bar.addEventListener('mousemove', e => showTip(bar, e.clientX, e.clientY));
+    bar.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+    bar.addEventListener('focus', () => {
+      const r = bar.getBoundingClientRect();
+      showTip(bar, r.left + r.width / 2, r.bottom);
+    });
+    bar.addEventListener('blur', () => { tip.style.display = 'none'; });
+  });
+</script>
