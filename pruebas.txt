@@ -1,0 +1,174 @@
+# Pruebas de conexión desde una máquina virtual a un PLC Siemens
+
+## Objetivo
+
+Validar si una máquina virtual puede llegar por red a un PLC Siemens antes de probar el `siemens-agent` contra hardware real.
+
+## 1. Comprobar si la VM ve la red del PLC
+
+Desde la VM:
+
+```powershell
+ping <IP_PLC>
+```
+
+Ejemplo:
+
+```powershell
+ping 192.168.10.20
+```
+
+Si el ping falla, no significa necesariamente que no haya conexión, porque ICMP puede estar bloqueado. Por eso hay que probar los puertos.
+
+## 2. Probar puerto Siemens Snap7 / S7Comm
+
+Snap7 usa normalmente:
+
+```text
+TCP 102
+```
+
+Desde PowerShell en la VM:
+
+```powershell
+Test-NetConnection -ComputerName <IP_PLC> -Port 102
+```
+
+Si devuelve:
+
+```text
+TcpTestSucceeded : True
+```
+
+entonces la VM puede llegar al PLC por S7Comm/Snap7.
+
+## 3. Probar puerto OPC UA
+
+OPC UA suele usar:
+
+```text
+TCP 4840
+```
+
+Desde la VM:
+
+```powershell
+Test-NetConnection -ComputerName <IP_PLC> -Port 4840
+```
+
+Si el PLC o SCADA usa otro puerto OPC UA:
+
+```powershell
+Test-NetConnection -ComputerName <IP_PLC> -Port <PUERTO_OPCUA>
+```
+
+## 4. Si la VM no conecta
+
+Revisar la configuración de red de la VM.
+
+### NAT
+
+La VM sale a internet o a la red a través del host, pero puede que no llegue a la red OT.
+
+```text
+VM -> NAT -> Host -> Red
+```
+
+Puede fallar si el PLC está en otra VLAN o si no hay routing hacia la red OT.
+
+### Bridge / Bridged
+
+La VM aparece como un equipo más de la red física.
+
+```text
+VM -> Red física -> PLC
+```
+
+Suele ser lo más útil para probar contra un PLC real, pero requiere permiso del responsable OT.
+
+### VLAN específica
+
+Si el PLC está en una VLAN OT, la VM debe estar conectada a un port group con esa VLAN.
+
+Ejemplo:
+
+```text
+Port Group: OT-VLAN-120
+VLAN ID: 120
+```
+
+## 5. Datos que hay que confirmar con IT/OT
+
+```text
+IP de la VM
+IP del PLC
+Máscara
+Gateway
+VLAN
+Firewall entre redes
+Puertos permitidos: 102 y/o 4840
+```
+
+Ejemplo:
+
+```text
+VM: 192.168.10.50
+PLC: 192.168.10.20
+Mask: 255.255.255.0
+Gateway: 192.168.10.1
+```
+
+Si están en la misma subred, debería haber conexión directa.
+
+Si están en subredes distintas, hace falta routing/firewall.
+
+## 6. Prueba mínima desde VM Windows
+
+En la VM:
+
+```powershell
+ipconfig
+route print
+ping <IP_PLC>
+Test-NetConnection -ComputerName <IP_PLC> -Port 102
+Test-NetConnection -ComputerName <IP_PLC> -Port 4840
+```
+
+Con eso se puede saber si la VM llega al PLC.
+
+## 7. Prueba desde Docker dentro de la VM
+
+Si el stack corre en Docker dentro de esa VM, no basta con que la VM conecte. Hay que probar desde el contenedor.
+
+Para Snap7/S7Comm:
+
+```bash
+docker exec -it siemens-agent python -c "import socket; s=socket.create_connection(('<IP_PLC>',102),5); print('OK'); s.close()"
+```
+
+Para OPC UA:
+
+```bash
+docker exec -it siemens-agent python -c "import socket; s=socket.create_connection(('<IP_PLC>',4840),5); print('OK'); s.close()"
+```
+
+Si desde la VM funciona pero desde Docker no, el problema está en la red Docker o en el firewall.
+
+## 8. Resumen
+
+Para que una VM conecte a un PLC se necesita:
+
+```text
+VM en la misma red/VLAN OT o con ruta hacia ella
+Firewall permitiendo TCP 102 para Snap7
+Firewall permitiendo TCP 4840 para OPC UA
+Docker con salida hacia esa red si se usan contenedores
+Permiso OT antes de probar
+```
+
+Primera prueba real recomendada desde la VM donde correrá el stack:
+
+```powershell
+Test-NetConnection -ComputerName <IP_PLC> -Port 4840
+Test-NetConnection -ComputerName <IP_PLC> -Port 102
+```
