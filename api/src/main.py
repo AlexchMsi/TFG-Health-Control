@@ -2,13 +2,13 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from influxdb_client import InfluxDBClient
 
 from shared.config.settings import Settings
 
 from .database import create_db_and_tables
-from .routers import health, servers, vmware
+from .routers import health, recommendations, scada, servers, vmware
 from .routers import config as config_router
 from .routers import plcs
 
@@ -27,6 +27,7 @@ async def lifespan(app: FastAPI):
     )
     app.state.bucket = settings.influxdb_bucket
     app.state.org = settings.influxdb_org
+    app.state.settings = settings
     yield
     app.state.influx.close()
 
@@ -47,6 +48,13 @@ app.include_router(servers.router, prefix="/metrics/servers", tags=["Servers"])
 app.include_router(vmware.router, prefix="/metrics/vmware", tags=["VMware"])
 app.include_router(config_router.router, prefix="/config", tags=["Config"])
 app.include_router(plcs.router, prefix="/metrics/plcs", tags=["PLCs"])
+app.include_router(scada.router, prefix="/metrics/scada", tags=["SCADA"])
+app.include_router(recommendations.router, prefix="/recommendations", tags=["AI"])
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    return RedirectResponse(url="/ui")
 
 
 @app.get("/ui", response_class=HTMLResponse, include_in_schema=False)

@@ -93,6 +93,7 @@
             class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="server">server — Windows (SNMP / WinRM)</option>
             <option value="siemens">siemens — PLC Siemens (OPC UA / Snap7)</option>
+            <option value="scada">scada — OPC UA tags</option>
           </select>
         </div>
 
@@ -143,6 +144,50 @@
               <input id="f-vmware_ignore_ssl" type="checkbox" checked class="rounded">
               Ignorar certificado SSL (self-signed)
             </label>
+          </div>
+        </div>
+
+        <!-- SCADA fields -->
+        <div id="fields-scada" class="hidden space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">OPC UA URL</label>
+            <input id="f-scada_opcua_url" type="text" placeholder="opc.tcp://10.0.0.1:4840"
+              class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Usuario OPC UA</label>
+              <input id="f-scada_username" type="text"
+                class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Contraseña OPC UA</label>
+              <input id="f-scada_password" type="password"
+                class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Tipo SCADA</label>
+              <select id="f-scada_type"
+                class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="auto">Auto</option>
+                <option value="Ignition">Ignition</option>
+                <option value="WinCC">WinCC</option>
+                <option value="FactoryTalk">FactoryTalk</option>
+                <option value="AVEVA">AVEVA</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Timeout (segundos)</label>
+              <input id="f-scada_timeout" type="number" value="10" min="1"
+                class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Tags (uno por línea: nombre,node_id)</label>
+            <textarea id="f-scada_tags" rows="4" placeholder="Temperature,ns=2;s=Line1.Temp&#10;Running,ns=2;s=Line1.Running"
+              class="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
           </div>
         </div>
 
@@ -203,8 +248,8 @@
   </div>
 
   <script>
-    const AGENT_TYPE_LABELS = { server: 'server', siemens: 'siemens', rockwell: 'rockwell', network: 'network' };
-    const TYPE_COLORS = { server: 'bg-blue-100 text-blue-700', siemens: 'bg-purple-100 text-purple-700', rockwell: 'bg-orange-100 text-orange-700', network: 'bg-teal-100 text-teal-700' };
+    const AGENT_TYPE_LABELS = { server: 'server', siemens: 'siemens', scada: 'scada', rockwell: 'rockwell', network: 'network' };
+    const TYPE_COLORS = { server: 'bg-blue-100 text-blue-700', siemens: 'bg-purple-100 text-purple-700', scada: 'bg-green-100 text-green-700', rockwell: 'bg-orange-100 text-orange-700', network: 'bg-teal-100 text-teal-700' };
 
     async function api(method, path, body) {
       const opts = { method, headers: { 'Content-Type': 'application/json' } };
@@ -308,6 +353,7 @@
 
       document.getElementById('fields-server').classList.toggle('hidden', agentType !== 'server');
       document.getElementById('fields-siemens').classList.toggle('hidden', agentType !== 'siemens');
+      document.getElementById('fields-scada').classList.toggle('hidden', agentType !== 'scada');
       document.getElementById('snmp-fields').classList.toggle('hidden', method !== 'snmp');
       document.getElementById('vmware-fields').classList.toggle('hidden', method !== 'vmware');
       document.getElementById('opcua-fields').classList.toggle('hidden', plcMethod === 'snap7');
@@ -355,6 +401,24 @@
           config.snap7_rack = parseInt(document.getElementById('f-snap7_rack').value) || 0;
           config.snap7_slot = parseInt(document.getElementById('f-snap7_slot').value) || 1;
         }
+      } else if (agentType === 'scada') {
+        const opcuaUrl = document.getElementById('f-scada_opcua_url').value.trim();
+        if (!opcuaUrl) { showError('La URL OPC UA es obligatoria.'); return; }
+        const tags = document.getElementById('f-scada_tags').value.split('\n')
+          .map(line => line.trim()).filter(Boolean).map(line => {
+            const [name, ...nodeParts] = line.split(',');
+            return { name: name.trim(), node_id: nodeParts.join(',').trim() };
+          });
+        if (!tags.length || tags.some(t => !t.name || !t.node_id)) { showError('Añade al menos un tag válido: nombre,node_id.'); return; }
+        config = {
+          ...config,
+          opcua_url: opcuaUrl,
+          username: document.getElementById('f-scada_username').value.trim() || null,
+          password: document.getElementById('f-scada_password').value || null,
+          scada_type: document.getElementById('f-scada_type').value,
+          timeout_seconds: parseInt(document.getElementById('f-scada_timeout').value) || 10,
+          tags,
+        };
       }
 
       const payload = {

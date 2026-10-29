@@ -23,6 +23,9 @@ grafana_data/
 # SQLite config database (runtime data, not source code)
 data/*.db
 
+# AI recommendations output (runtime data, not source code)
+data/recommendations.json
+
 # IDE
 .vscode/
 .idea/
@@ -31,6 +34,9 @@ data/*.db
 # Claude Code — archivos locales (no subir al repo)
 .claude/settings.local.json
 CLAUDE.md
+
+# OpenCode — configuracion local de agentes (no subir al repo)
+.opencode/
 
 # OS
 .DS_Store

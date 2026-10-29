@@ -32,3 +32,7 @@ class Settings(BaseSettings):
     # API
     api_host: str = "0.0.0.0"
     api_port: int = 8000
+
+    # AI recommendations
+    ollama_url: str = "http://ollama:11434"
+    ollama_model: str = "llama3.1:8b"

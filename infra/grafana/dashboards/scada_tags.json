@@ -1,0 +1,29 @@
+{
+  "title": "SCADA Tag Health",
+  "uid": "scada-tag-health",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Reachable tags",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
+      "targets": [
+        {
+          "query": "from(bucket: \"${INFLUXDB_BUCKET}\") |> range(start: -15m) |> filter(fn: (r) => r._measurement == \"scada_tag_health\" and r._field == \"reachable\") |> last()"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Latest tag values",
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 8},
+      "targets": [
+        {
+          "query": "from(bucket: \"${INFLUXDB_BUCKET}\") |> range(start: -15m) |> filter(fn: (r) => r._measurement == \"scada_tag_health\") |> last() |> pivot(rowKey: [\"source_id\", \"scada_type\", \"tag_name\"], columnKey: [\"_field\"], valueColumn: \"_value\")"
+        }
+      ]
+    }
+  ]
+}

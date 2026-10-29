@@ -1,5 +1,3 @@
-version: "3.9"
-
 networks:
   ot-health-net:
     driver: bridge
@@ -8,6 +6,7 @@ volumes:
   influxdb_data:
   influxdb_config:
   grafana_data:
+  ollama_data:
 
 services:
 
@@ -57,6 +56,27 @@ services:
       influxdb:
         condition: service_healthy
 
+  # ── Local LLM ───────────────────────────────────────────────────────────────
+  ollama:
+    # Pinned version (validated locally). In an air-gapped OT deployment the
+    # image must be pre-loaded with `docker save` / `docker load` and the model
+    # preloaded in the ollama_data volume (`ollama pull llama3.1:8b` beforehand).
+    image: ollama/ollama:0.30.7
+    container_name: ollama
+    restart: unless-stopped
+    networks: [ot-health-net]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      # The image ships no curl/wget; the ollama binary doubles as the probe.
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
   # ── SNMP test target (local dev only — simulates a Windows host via snmpd) ──
   snmpd-sim:
     image: alpine:3.19
@@ -97,10 +117,33 @@ services:
     ports:
       - "8000:8000"
     env_file: .env
+    environment:
+      - OLLAMA_URL=http://ollama:11434
     volumes:
       - ./data:/app/data
     depends_on:
       influxdb:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+
+  # ── AI recommendations ─────────────────────────────────────────────────────
+  recommendation-agent:
+    build:
+      context: .
+      dockerfile: agents/recommendation-agent/Dockerfile
+    container_name: recommendation-agent
+    restart: unless-stopped
+    networks: [ot-health-net]
+    env_file: .env
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      influxdb:
+        condition: service_healthy
+      ollama:
         condition: service_healthy
 
   # ── Phase 2: Siemens PLC agent ─────────────────────────────────────────────
@@ -109,6 +152,23 @@ services:
       context: .
       dockerfile: agents/siemens-agent/Dockerfile
     container_name: siemens-agent
+    restart: unless-stopped
+    networks: [ot-health-net]
+    env_file: .env
+    environment:
+      - API_URL=http://health-api:8000
+    depends_on:
+      influxdb:
+        condition: service_healthy
+      api:
+        condition: service_started
+
+  # ── SCADA tag agent ────────────────────────────────────────────────────────
+  scada-agent:
+    build:
+      context: .
+      dockerfile: agents/scada-agent/Dockerfile
+    container_name: scada-agent
     restart: unless-stopped
     networks: [ot-health-net]
     env_file: .env
